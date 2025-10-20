@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useSocket } from "./hooks/useSocket";
 import { LoginScreen } from "./components/LoginScreen";
 import { GameTable } from "./components/GameTable";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeToggle } from "./components/ThemeToggle";
 import "./App.css";
 
 function App() {
@@ -46,7 +48,18 @@ function App() {
     );
   }
 
-  return <GameTable room={room} currentUser={currentUser} />;
+  return (
+    <>
+      <ThemeToggle />
+      <GameTable room={room} currentUser={currentUser} />
+    </>
+  );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  );
+}
