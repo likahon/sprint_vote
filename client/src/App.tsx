@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useSocket } from './hooks/useSocket';
-import { LoginScreen } from './components/LoginScreen';
-import { GameTable } from './components/GameTable';
-import './App.css';
+import { useState, useEffect } from "react";
+import { useSocket } from "./hooks/useSocket";
+import { LoginScreen } from "./components/LoginScreen";
+import { GameTable } from "./components/GameTable";
+import "./App.css";
 
 function App() {
-  const { room, currentUser, error, joinRoom, setCurrentUser, setError } = useSocket();
+  const { room, currentUser, error, joinRoom, setCurrentUser, setError } =
+    useSocket();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = (name: string) => {
@@ -16,7 +17,7 @@ function App() {
   useEffect(() => {
     if (room && !currentUser) {
       // Buscar el usuario actual en la sala
-      const user = room.users.find(u => u.socketId);
+      const user = room.users.find((u) => u.socketId);
       if (user) {
         setCurrentUser(user);
       }
@@ -49,4 +50,3 @@ function App() {
 }
 
 export default App;
-

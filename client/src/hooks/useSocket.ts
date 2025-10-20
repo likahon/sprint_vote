@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Room, User } from '../types';
+import { Room, User, EmojiReaction } from '../types';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -55,6 +55,45 @@ export const useSocket = () => {
       setError(data.message);
     });
 
+    newSocket.on('emoji-received', (data: { emoji: EmojiReaction }) => {
+      console.log('Received emoji:', data.emoji);
+      // Actualizar la sala con el nuevo emoji
+      setRoom(prevRoom => {
+        if (!prevRoom) return prevRoom;
+        
+        const updatedUsers = prevRoom.users.map(user => {
+          if (user.id === data.emoji.toUserId) {
+            return {
+              ...user,
+              emojis: [...(user.emojis || []), data.emoji]
+            };
+          }
+          return user;
+        });
+        
+        return {
+          ...prevRoom,
+          users: updatedUsers
+        };
+      });
+    });
+
+    newSocket.on('emoji-flying', (data: {
+      emoji: string;
+      fromPosition: { x: number; y: number };
+      toPosition: { x: number; y: number };
+      fromUserId: string;
+      fromUserName: string;
+      toUserId: string;
+      id: string;
+    }) => {
+      console.log('🎯 Received flying emoji from another user:', data);
+      console.log('🎯 Current user ID:', currentUser?.id);
+      console.log('🎯 From user ID:', data.fromUserId);
+      console.log('🎯 Should show animation:', data.fromUserId !== currentUser?.id);
+      // Este evento se manejará en el componente GameTable
+    });
+
     return () => {
       newSocket.close();
     };
@@ -87,6 +126,26 @@ export const useSocket = () => {
     }
   };
 
+  const sendEmoji = (toUserId: string, emoji: string, fromPosition: { x: number; y: number }, toPosition: { x: number; y: number }) => {
+    if (socket && currentUser) {
+      const emojiReaction: EmojiReaction = {
+        id: Date.now().toString(),
+        emoji,
+        fromUserId: currentUser.id,
+        fromUserName: currentUser.name,
+        toUserId,
+        timestamp: Date.now()
+      };
+      
+      // Enviar el emoji con las posiciones para la animación
+      socket.emit('send-emoji', {
+        ...emojiReaction,
+        fromPosition,
+        toPosition
+      });
+    }
+  };
+
   return {
     socket,
     room,
@@ -96,6 +155,7 @@ export const useSocket = () => {
     vote,
     revealVotes,
     resetVotes,
+    sendEmoji,
     setCurrentUser,
     setError
   };

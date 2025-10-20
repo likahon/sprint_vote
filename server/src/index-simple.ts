@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
-import { User, Room } from './types';
+import { User, Room, EmojiReaction } from './types';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -60,7 +60,8 @@ io.on('connection', async (socket) => {
           isAdmin,
           hasVoted: false,
           socketId: socket.id,
-          roomId: room.id
+          roomId: room.id,
+          emojis: []
         };
 
         users.set(socket.id, user);
@@ -171,6 +172,42 @@ io.on('connection', async (socket) => {
     } catch (error) {
       console.error('Error in reset-votes:', error);
       socket.emit('error', { message: 'Error al resetear votos' });
+    }
+  });
+
+  socket.on('send-emoji', async (emoji: EmojiReaction) => {
+    try {
+      console.log('Received emoji:', emoji);
+      
+      // Verificar que el usuario que envía el emoji existe
+      const fromUser = room.users.find(u => u.socketId === socket.id);
+      if (!fromUser) {
+        socket.emit('error', { message: 'Usuario no encontrado' });
+        return;
+      }
+
+      // Verificar que el usuario destinatario existe
+      const toUser = room.users.find(u => u.id === emoji.toUserId);
+      if (!toUser) {
+        socket.emit('error', { message: 'Usuario destinatario no encontrado' });
+        return;
+      }
+
+      // Agregar el emoji al usuario destinatario
+      if (!toUser.emojis) {
+        toUser.emojis = [];
+      }
+      toUser.emojis.push(emoji);
+
+      // Broadcast el emoji a todos los usuarios
+      io.to(room.id).emit('emoji-received', { emoji });
+
+      // Actualizar la sala
+      io.to(room.id).emit('room-update', room);
+
+    } catch (error) {
+      console.error('Error in send-emoji:', error);
+      socket.emit('error', { message: 'Error al enviar emoji' });
     }
   });
 

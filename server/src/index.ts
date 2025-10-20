@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import { User, IUser } from './models/User';
 import { Room, IRoom } from './models/Room';
-import { User as UserType, Room as RoomType } from './types';
+import { User as UserType, Room as RoomType, EmojiReaction } from './types';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -238,6 +238,60 @@ io.on('connection', async (socket) => {
     } catch (error) {
       console.error('Error in reset-votes:', error);
       socket.emit('error', { message: 'Error al resetear votos' });
+    }
+  });
+
+  socket.on('send-emoji', async (data: EmojiReaction & { fromPosition?: { x: number; y: number }; toPosition?: { x: number; y: number } }) => {
+    try {
+      console.log('Received emoji:', data);
+      
+      // Verificar que el usuario que envía el emoji existe
+      const fromUser = await User.findOne({ socketId: socket.id });
+      if (!fromUser) {
+        socket.emit('error', { message: 'Usuario no encontrado' });
+        return;
+      }
+
+      // Verificar que el usuario destinatario existe
+      const toUser = await User.findOne({ id: data.toUserId });
+      if (!toUser) {
+        socket.emit('error', { message: 'Usuario destinatario no encontrado' });
+        return;
+      }
+
+      // Agregar el emoji al usuario destinatario
+      if (!toUser.emojis) {
+        toUser.emojis = [];
+      }
+      toUser.emojis.push(data);
+      await toUser.save();
+
+      // Broadcast el emoji con animación a todos los usuarios
+      const flyingEmojiData = {
+        emoji: data.emoji,
+        fromPosition: data.fromPosition,
+        toPosition: data.toPosition,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        toUserId: data.toUserId,
+        id: data.id
+      };
+      
+      console.log('🎯 Broadcasting emoji-flying to all users:', flyingEmojiData);
+      io.to(GLOBAL_ROOM_ID).emit('emoji-flying', flyingEmojiData);
+
+      // También enviar el evento original para compatibilidad
+      io.to(GLOBAL_ROOM_ID).emit('emoji-received', { emoji: data });
+
+      // Actualizar la sala
+      const roomWithUsers = await getRoomWithUsers();
+      if (roomWithUsers) {
+        io.to(GLOBAL_ROOM_ID).emit('room-update', roomWithUsers);
+      }
+
+    } catch (error) {
+      console.error('Error in send-emoji:', error);
+      socket.emit('error', { message: 'Error al enviar emoji' });
     }
   });
 

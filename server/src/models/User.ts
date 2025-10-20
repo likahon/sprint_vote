@@ -8,6 +8,14 @@ export interface IUser extends Document {
   vote?: string;
   socketId?: string;
   roomId?: string;
+  emojis?: Array<{
+    id: string;
+    emoji: string;
+    fromUserId: string;
+    fromUserName: string;
+    toUserId: string;
+    timestamp: number;
+  }>;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -17,7 +25,15 @@ const UserSchema = new Schema<IUser>({
   hasVoted: { type: Boolean, default: false },
   vote: { type: String },
   socketId: { type: String },
-  roomId: { type: String }
+  roomId: { type: String },
+  emojis: [{
+    id: { type: String, required: true },
+    emoji: { type: String, required: true },
+    fromUserId: { type: String, required: true },
+    fromUserName: { type: String, required: true },
+    toUserId: { type: String, required: true },
+    timestamp: { type: Number, required: true }
+  }]
 }, {
   timestamps: true
 });
