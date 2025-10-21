@@ -146,13 +146,6 @@ export const useSocket = () => {
     }
   };
 
-  const changeName = (userId: string, newName: string) => {
-    if (socket) {
-      console.log(`📝 Emitting change-name event:`, { userId, newName });
-      socket.emit('change-name', { userId, newName });
-    }
-  };
-
   return {
     socket,
     room,
@@ -163,7 +156,6 @@ export const useSocket = () => {
     revealVotes,
     resetVotes,
     sendEmoji,
-    changeName,
     setCurrentUser,
     setError
   };
