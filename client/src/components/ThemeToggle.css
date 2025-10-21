@@ -1,80 +1,206 @@
-.theme-toggle {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  background: var(--bg-primary);
-  backdrop-filter: blur(20px);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 0.75rem;
+/* Switch Container */
+.theme-toggle-switch {
+  background: none;
+  border: none;
   cursor: pointer;
-  font-size: 1.5rem;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-md);
-  z-index: 1001;
+  padding: 0;
+  position: relative;
+  outline: none;
+}
+
+.theme-toggle-switch:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+  border-radius: 50px;
+}
+
+/* Track del switch (fondo) */
+.switch-track {
+  width: 80px;
+  height: 40px;
+  border-radius: 50px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Modo Light - Cielo azul claro */
+.theme-toggle-switch.light .switch-track {
+  background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 100%);
+}
+
+/* Modo Dark - Cielo nocturno */
+.theme-toggle-switch.dark .switch-track {
+  background: linear-gradient(180deg, #0a1929 0%, #1a2942 100%);
+}
+
+/* Estrellas (solo visibles en modo oscuro) */
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.theme-toggle-switch.dark .stars {
+  opacity: 1;
+}
+
+.star {
+  position: absolute;
+  color: white;
+  font-size: 6px;
+  animation: twinkle 2s infinite;
+}
+
+/* Posicionar estrellas */
+.star-1 { top: 15%; left: 15%; animation-delay: 0s; }
+.star-2 { top: 25%; left: 75%; animation-delay: 0.3s; }
+.star-3 { top: 45%; left: 25%; animation-delay: 0.6s; }
+.star-4 { top: 60%; left: 65%; animation-delay: 0.9s; }
+.star-5 { top: 75%; left: 35%; animation-delay: 1.2s; }
+.star-6 { top: 35%; left: 55%; animation-delay: 0.2s; }
+.star-7 { top: 55%; left: 80%; animation-delay: 0.5s; }
+.star-8 { top: 20%; left: 45%; animation-delay: 0.8s; }
+.star-9 { top: 70%; left: 15%; animation-delay: 1.1s; }
+.star-10 { top: 10%; left: 60%; animation-delay: 0.4s; }
+.star-11 { top: 50%; left: 10%; animation-delay: 0.7s; }
+.star-12 { top: 80%; left: 70%; animation-delay: 1s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Nubes (solo visibles en modo claro) */
+.clouds {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.theme-toggle-switch.light .clouds {
+  opacity: 1;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 10px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.cloud-1 {
+  top: 20%;
+  right: 15%;
+  animation: floatCloud 3s infinite ease-in-out;
+}
+
+.cloud-2 {
+  top: 55%;
+  right: 25%;
+  font-size: 12px;
+  animation: floatCloud 4s infinite ease-in-out 1s;
+}
+
+@keyframes floatCloud {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(3px) translateY(-2px); }
+}
+
+/* El círculo deslizante (thumb) */
+.switch-thumb {
+  position: absolute;
+  top: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
+  z-index: 10;
 }
 
-.theme-toggle:hover {
-  background: var(--bg-secondary);
-  border-color: var(--accent-primary);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: var(--shadow-lg);
+/* Posición del thumb en modo light */
+.theme-toggle-switch.light .switch-thumb {
+  left: 4px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
 }
 
-.theme-toggle:active {
-  transform: translateY(0) scale(0.95);
+/* Posición del thumb en modo dark */
+.theme-toggle-switch.dark .switch-thumb {
+  left: 44px;
+  background: linear-gradient(135deg, #F0F0F0 0%, #E0E0E0 100%);
 }
 
-.theme-toggle.light {
-  color: #f59e0b;
+/* Sol y Luna */
+.sun,
+.moon {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: iconRotate 0.5s ease;
 }
 
-.theme-toggle.dark {
-  color: #fbbf24;
+@keyframes iconRotate {
+  0% { transform: rotate(-180deg) scale(0); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 
-.theme-toggle::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
+/* Hover effect */
+.theme-toggle-switch:hover .switch-thumb {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
 }
 
-.theme-toggle:hover::before {
-  opacity: 0.1;
-}
-
-/* Animación de rotación al cambiar tema */
-.theme-toggle.rotating {
-  animation: themeRotate 0.5s ease-in-out;
-}
-
-@keyframes themeRotate {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.1); }
-  100% { transform: rotate(360deg) scale(1); }
+.theme-toggle-switch:active .switch-thumb {
+  transform: scale(0.95);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .theme-toggle {
-    top: 0.75rem;
-    left: 0.75rem;
-    width: 45px;
-    height: 45px;
-    font-size: 1.25rem;
-    padding: 0.5rem;
+  .switch-track {
+    width: 70px;
+    height: 35px;
+  }
+
+  .switch-thumb {
+    width: 28px;
+    height: 28px;
+    top: 3.5px;
+  }
+
+  .theme-toggle-switch.light .switch-thumb {
+    left: 3.5px;
+  }
+
+  .theme-toggle-switch.dark .switch-thumb {
+    left: 38.5px;
+  }
+
+  .sun,
+  .moon {
+    font-size: 16px;
+  }
+
+  .cloud {
+    font-size: 8px;
+  }
+
+  .cloud-2 {
+    font-size: 10px;
   }
 }

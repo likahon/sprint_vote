@@ -1,0 +1,177 @@
+.hamburger-menu {
+  position: relative;
+}
+
+/* Botón hamburguesa */
+.hamburger-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .hamburger-button {
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.hamburger-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .hamburger-button:hover {
+  background: rgba(96, 165, 250, 0.25);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+}
+
+.hamburger-button:active {
+  transform: translateY(0);
+}
+
+/* Líneas del hamburger */
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background-color: white;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .hamburger-line {
+  background-color: #60a5fa;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+}
+
+/* Animación cuando está abierto */
+.hamburger-button.open .hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-button.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-button.open .hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Dropdown del menú */
+.menu-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  min-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.menu-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Lista del menú */
+.menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.menu-list li {
+  margin: 0;
+  padding: 0;
+}
+
+/* Items del menú */
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
+}
+
+.menu-item:active {
+  background: var(--bg-tertiary);
+}
+
+.menu-icon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-text {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hamburger-button {
+    width: 40px;
+    height: 40px;
+    padding: 0.5rem;
+  }
+
+  .hamburger-line {
+    width: 20px;
+  }
+
+  .menu-dropdown {
+    min-width: 200px;
+  }
+
+  .menu-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hamburger-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .menu-dropdown {
+    min-width: 180px;
+  }
+}
+

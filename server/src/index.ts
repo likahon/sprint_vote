@@ -78,30 +78,82 @@ io.on('connection', async (socket) => {
   socket.on('user-join', async (data: { name: string }) => {
     try {
       const { name } = data;
-      const isAdmin = name.endsWith('_admin');
-      const displayName = isAdmin ? name.replace('_admin', '') : name;
+      const wantsToBeAdmin = name.endsWith('_admin');
+      const displayName = wantsToBeAdmin ? name.replace('_admin', '') : name;
 
-      // Check if user already exists
-      let user = await User.findOne({ socketId: socket.id });
+      console.log(`🔍 User trying to join: ${displayName} ${wantsToBeAdmin ? '(wants admin)' : '(regular user)'} - Socket: ${socket.id}`);
+
+      // Check if user already exists with this socket
+      const existingUser = await User.findOne({ socketId: socket.id });
+
+      // VALIDACIÓN CRÍTICA: Verificar si ya existe un admin ANTES de hacer cualquier cosa
+      if (wantsToBeAdmin) {
+        // Buscar todos los usuarios admin en la sala
+        const allAdmins = await User.find({ 
+          roomId: GLOBAL_ROOM_ID, 
+          isAdmin: true 
+        });
+
+        console.log(`👑 Current admins in room: ${allAdmins.length}`, allAdmins.map(a => `${a.name} (${a.id})`));
+
+        // Permitir SOLO si:
+        // 1. No hay admins en la sala, O
+        // 2. El usuario existente YA es el admin (está reconectando)
+        const isReconnectingAdmin = existingUser && existingUser.isAdmin && allAdmins.length === 1 && allAdmins[0].id === existingUser.id;
+        
+        if (allAdmins.length > 0 && !isReconnectingAdmin) {
+          console.log(`❌ REJECTING ADMIN REQUEST - Admin already exists: ${allAdmins[0].name}`);
+          socket.emit('error', { 
+            message: `Ya existe un administrador en la sala (${allAdmins[0].name}). Solo puede haber un administrador.` 
+          });
+          socket.disconnect(true);
+          return;
+        }
+
+        console.log(`✅ Admin request approved ${isReconnectingAdmin ? '(reconnecting)' : '(new admin)'}`);
+      }
+
+      let user: any;
       
-      if (user) {
+      if (existingUser) {
         // Update existing user
-        user.name = displayName;
-        user.isAdmin = isAdmin;
-        user.socketId = socket.id;
-        user.roomId = GLOBAL_ROOM_ID;
-        await user.save();
+        console.log(`🔄 Updating existing user: ${existingUser.name} -> ${displayName}`);
+        existingUser.name = displayName;
+        existingUser.isAdmin = wantsToBeAdmin;
+        existingUser.socketId = socket.id;
+        existingUser.roomId = GLOBAL_ROOM_ID;
+        await existingUser.save();
+        user = existingUser;
       } else {
         // Create new user
+        console.log(`➕ Creating new user: ${displayName}`);
         user = new User({
           id: uuidv4(),
           name: displayName,
-          isAdmin,
+          isAdmin: wantsToBeAdmin,
           hasVoted: false,
           socketId: socket.id,
           roomId: GLOBAL_ROOM_ID
         });
         await user.save();
+      }
+
+      // VERIFICACIÓN FINAL DE SEGURIDAD: Asegurar que solo hay un admin
+      if (wantsToBeAdmin) {
+        const finalAdminCheck = await User.countDocuments({ 
+          roomId: GLOBAL_ROOM_ID, 
+          isAdmin: true 
+        });
+        
+        if (finalAdminCheck > 1) {
+          console.log(`🚨 CRITICAL: Multiple admins detected! Removing latest admin`);
+          await User.deleteOne({ id: user.id });
+          socket.emit('error', { 
+            message: 'Error de sincronización. Por favor intenta nuevamente.' 
+          });
+          socket.disconnect(true);
+          return;
+        }
       }
 
       // Ensure global room exists
@@ -120,7 +172,7 @@ io.on('connection', async (socket) => {
       }
 
       // Set admin if this is the first admin
-      if (isAdmin && !room.adminId) {
+      if (wantsToBeAdmin && !room.adminId) {
         room.adminId = user.id;
       }
 
@@ -128,6 +180,8 @@ io.on('connection', async (socket) => {
 
       // Join socket to room
       socket.join(GLOBAL_ROOM_ID);
+
+      console.log(`✅ User joined successfully: ${displayName} ${wantsToBeAdmin ? '(Admin)' : '(User)'}`);
 
       // Emit user joined event
       socket.emit('user-joined', convertUser(user));
@@ -302,13 +356,23 @@ io.on('connection', async (socket) => {
       // Remove user from room
       const user = await User.findOne({ socketId: socket.id });
       if (user) {
+        console.log(`👋 User leaving: ${user.name} ${user.isAdmin ? '(Admin)' : '(User)'}`);
+        
         const room = await Room.findOne({ id: GLOBAL_ROOM_ID });
         if (room) {
           room.users = room.users.filter((userId: any) => userId.toString() !== (user._id as any).toString());
+          
+          // If the disconnecting user was admin, clear the adminId
+          if (user.isAdmin && room.adminId === user.id) {
+            room.adminId = undefined;
+            console.log('👑 Admin left - admin slot is now available');
+          }
+          
           await room.save();
         }
         
         await User.deleteOne({ socketId: socket.id });
+        console.log(`✅ User ${user.name} removed from database`);
       }
 
       // Broadcast room update

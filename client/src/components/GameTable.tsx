@@ -13,15 +13,18 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
   const { vote, revealVotes, resetVotes, sendEmoji, socket } = useSocket();
   const [selectedVote, setSelectedVote] = useState<string>("");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
-  const [flyingEmojis, setFlyingEmojis] = useState<Array<{
-    id: string;
-    emoji: string;
-    fromPosition: { x: number; y: number };
-    toPosition: { x: number; y: number };
-    targetUserId: string;
-    fromUserId: string;
-  }>>([]);
+  const [flyingEmojis, setFlyingEmojis] = useState<
+    Array<{
+      id: string;
+      emoji: string;
+      fromPosition: { x: number; y: number };
+      toPosition: { x: number; y: number };
+      targetUserId: string;
+      fromUserId: string;
+    }>
+  >([]);
   const [bouncingCard, setBouncingCard] = useState<string | null>(null);
+  const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const userCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Debug: Log selectedEmoji state changes
@@ -30,6 +33,15 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     console.log("Selected emoji changed to:", selectedEmoji);
     console.log("Type:", typeof selectedEmoji);
   }, [selectedEmoji]);
+
+  // Abrir modal automáticamente cuando se revelan las cartas
+  useEffect(() => {
+    if (room.votesRevealed) {
+      setShowSummaryModal(true);
+    } else {
+      setShowSummaryModal(false);
+    }
+  }, [room.votesRevealed]);
 
   // Escuchar emojis volando de otros usuarios
   useEffect(() => {
@@ -44,11 +56,17 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       toUserId: string;
       id: string;
     }) => {
-      console.log("🚀 GameTable received flying emoji from another user:", data);
+      console.log(
+        "🚀 GameTable received flying emoji from another user:",
+        data
+      );
       console.log("🚀 Current user ID:", currentUser.id);
       console.log("🚀 From user ID:", data.fromUserId);
-      console.log("🚀 Should show animation:", data.fromUserId !== currentUser.id);
-      
+      console.log(
+        "🚀 Should show animation:",
+        data.fromUserId !== currentUser.id
+      );
+
       // Solo mostrar la animación si no es del usuario actual
       if (data.fromUserId !== currentUser.id) {
         console.log("🚀 Adding flying emoji to state");
@@ -61,7 +79,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
           fromUserId: data.fromUserId,
         };
 
-        setFlyingEmojis(prev => {
+        setFlyingEmojis((prev) => {
           console.log("🚀 Previous flying emojis:", prev.length);
           console.log("🚀 Adding new emoji:", newFlyingEmoji);
           return [...prev, newFlyingEmoji];
@@ -71,10 +89,10 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       }
     };
 
-    socket.on('emoji-flying', handleEmojiFlying);
+    socket.on("emoji-flying", handleEmojiFlying);
 
     return () => {
-      socket.off('emoji-flying', handleEmojiFlying);
+      socket.off("emoji-flying", handleEmojiFlying);
     };
   }, [socket, currentUser.id]);
 
@@ -86,7 +104,6 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
   const handleRevealVotes = () => {
     console.log("Revealing votes...", {
       canReveal,
-      canRevealWithVotes,
       currentUser,
       room,
     });
@@ -180,7 +197,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       fromUserId: currentUser.id,
     };
 
-    setFlyingEmojis(prev => [...prev, newFlyingEmoji]);
+    setFlyingEmojis((prev) => [...prev, newFlyingEmoji]);
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -193,21 +210,21 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     console.log("Flying emoji animation completed for ID:", emojiId);
 
     // Encontrar el emoji que completó su animación
-    const completedEmoji = flyingEmojis.find(emoji => emoji.id === emojiId);
+    const completedEmoji = flyingEmojis.find((emoji) => emoji.id === emojiId);
     if (completedEmoji) {
       // Solo enviar al servidor si es un emoji que lanzó el usuario actual
       // Los emojis de otros usuarios ya fueron enviados por ellos
       if (completedEmoji.fromUserId === currentUser.id) {
         sendEmoji(
-          completedEmoji.targetUserId, 
+          completedEmoji.targetUserId,
           completedEmoji.emoji,
           completedEmoji.fromPosition,
           completedEmoji.toPosition
         );
       }
-      
+
       // Remover el emoji de la lista
-      setFlyingEmojis(prev => prev.filter(emoji => emoji.id !== emojiId));
+      setFlyingEmojis((prev) => prev.filter((emoji) => emoji.id !== emojiId));
     }
   };
 
@@ -229,29 +246,38 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     }
   };
 
-  const allUsersVoted = room.users.every((user) => user.hasVoted);
-  const canReveal = currentUser.isAdmin && allUsersVoted && !room.votesRevealed;
   const canReset = currentUser.isAdmin && room.votesRevealed;
 
-  // Si es admin y hay al menos un voto, puede revelar
-  const canRevealWithVotes =
-    currentUser.isAdmin &&
-    room.users.some((user) => user.hasVoted) &&
-    !room.votesRevealed;
+  // El admin puede revelar en cualquier momento, incluso si nadie ha votado
+  // (esto permite revelar cartas con "?" para todos los que no votaron)
+  const canReveal = currentUser.isAdmin && !room.votesRevealed;
+
+  // Calcular resumen de votos
+  const getVoteSummary = () => {
+    const voteCounts: { [key: string]: number } = {};
+    let totalVotes = 0;
+
+    room.users.forEach((user) => {
+      if (user.vote && user.vote !== "?") {
+        voteCounts[user.vote] = (voteCounts[user.vote] || 0) + 1;
+        totalVotes++;
+      }
+    });
+
+    // Ordenar por número de votos (descendente)
+    const sortedVotes = Object.entries(voteCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([vote, count]) => ({
+        vote,
+        count,
+        percentage: totalVotes > 0 ? (count / totalVotes) * 100 : 0,
+      }));
+
+    return { sortedVotes, totalVotes };
+  };
 
   return (
     <div className="game-table">
-      {/* Header */}
-      <div className="table-header">
-        <h2>Mesa de Planning Poker</h2>
-        <div className="room-info">
-          <span>Usuarios: {room.users.length}</span>
-          {currentUser.isAdmin && (
-            <span className="admin-badge">👑 Administrador</span>
-          )}
-        </div>
-      </div>
-
       {/* Mesa central con cartas */}
       <div className="table-center">
         <div className="cards-area">
@@ -273,10 +299,14 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
                 {user.isAdmin && <span className="admin-crown">👑</span>}
               </div>
               <div
-                className={`card ${room.votesRevealed ? "revealed" : "hidden"}`}
+                className={`card ${
+                  room.votesRevealed ? "revealed" : "hidden"
+                } ${room.votesRevealed && !user.vote ? "no-vote" : ""}`}
               >
                 {room.votesRevealed ? (
-                  <span className="card-value">{user.vote || "?"}</span>
+                  <span className="card-value">
+                    {user.vote && user.vote !== "?" ? user.vote : "?"}
+                  </span>
                 ) : (
                   <span className="card-back">🂠</span>
                 )}
@@ -306,6 +336,86 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
           ))}
         </div>
       </div>
+
+      {/* Modal de resumen de votaciones */}
+      {showSummaryModal && room.votesRevealed && (
+        <div
+          className="summary-modal-overlay"
+          onClick={() => setShowSummaryModal(false)}
+        >
+          <div
+            className="summary-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="summary-modal-close"
+              onClick={() => setShowSummaryModal(false)}
+              aria-label="Cerrar"
+            >
+              ✕
+            </button>
+            <h3 className="summary-title">📊 Resumen de Votaciones</h3>
+            <div className="summary-stats">
+              {(() => {
+                const { sortedVotes, totalVotes } = getVoteSummary();
+
+                if (sortedVotes.length === 0) {
+                  return <p className="no-votes">No hay votos registrados</p>;
+                }
+
+                return (
+                  <>
+                    <div className="votes-grid">
+                      {sortedVotes.map(({ vote, count, percentage }, index) => (
+                        <div
+                          key={vote}
+                          className={`vote-item ${
+                            index === 0 ? "most-voted" : ""
+                          }`}
+                        >
+                          <div className="vote-card">
+                            <span className="vote-value">{vote}</span>
+                          </div>
+                          <div className="vote-info">
+                            <div className="vote-count">
+                              {count} {count === 1 ? "voto" : "votos"}
+                            </div>
+                            <div className="vote-bar-container">
+                              <div
+                                className="vote-bar"
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                            <div className="vote-percentage">
+                              {percentage.toFixed(0)}%
+                            </div>
+                          </div>
+                          {index === 0 && sortedVotes.length > 1 && (
+                            <div className="most-voted-badge">
+                              🏆 Más votada
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="total-votes">
+                      Total de votos: <strong>{totalVotes}</strong>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="summary-modal-actions">
+              <button
+                className="summary-modal-btn"
+                onClick={() => setShowSummaryModal(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Opciones de votación */}
       <div className="voting-options">
@@ -343,16 +453,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       {/* Controles de admin */}
       {currentUser.isAdmin && (
         <div className="admin-controls">
-          {room.users.length === 1 && (
-            <div className="admin-info">
-              <p>
-                👑 Eres el administrador. Vota primero y luego podrás revelar tu
-                carta.
-              </p>
-            </div>
-          )}
-
-          {(canReveal || canRevealWithVotes) && (
+          {canReveal && (
             <button className="reveal-btn" onClick={handleRevealVotes}>
               🃏 Revelar Votaciones
             </button>
@@ -365,11 +466,6 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
           )}
         </div>
       )}
-
-      {/* Botón para salir */}
-      <button className="leave-btn" onClick={() => window.location.reload()}>
-        Salir de la Mesa
-      </button>
 
       {/* Emojis volando - múltiples simultáneos */}
       {flyingEmojis.map((flyingEmoji) => (

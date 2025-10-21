@@ -71,13 +71,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg-secondary);
-  min-height: 100vh;
+  background-image: url('/src/assets/story_points_vote_day.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  height: 100vh;
+  overflow: hidden;
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+[data-theme="dark"] body {
+  background-image: url('/src/assets/story_points_vote_night.png');
 }
 
 code {
