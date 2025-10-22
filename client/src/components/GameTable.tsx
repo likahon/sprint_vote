@@ -5,13 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import {
-  Room,
-  User,
-  VOTE_OPTIONS,
-  FlyingEmojiData,
-  ANIMATION_CONFIG,
-} from "../types";
+import { Room, User, VOTE_OPTIONS, ANIMATION_CONFIG } from "../types";
 import { useSocket } from "../hooks/useSocket";
 import { useEmojiAnimation } from "../hooks/useEmojiAnimation";
 import { IntegratedEmojiSelector } from "./IntegratedEmojiSelector";
@@ -56,7 +50,6 @@ export const GameTable: React.FC<GameTableProps> = ({
   const {
     flyingEmojis,
     bouncingCard,
-    addFlyingEmoji,
     handleFlyingEmojiComplete,
     triggerCardBounce,
   } = useEmojiAnimation({
@@ -111,37 +104,12 @@ export const GameTable: React.FC<GameTableProps> = ({
       if (!selectedEmoji) return;
 
       const userCardRect = event.currentTarget.getBoundingClientRect();
-      const targetPosition = {
-        x: userCardRect.left + userCardRect.width / 2,
-        y: userCardRect.top + userCardRect.height / 2,
-      };
-
       const screenWidth = window.innerWidth;
       const isLeftSide = userCardRect.left < screenWidth / 2;
 
-      const fromPosition = isLeftSide
-        ? { x: -20, y: event.clientY }
-        : { x: screenWidth + 20, y: event.clientY };
-
-      const newFlyingEmoji: FlyingEmojiData = {
-        id: `${Date.now()}-${Math.random()}`,
-        emoji: selectedEmoji,
-        fromPosition,
-        toPosition: targetPosition,
-        targetUserId: userId,
-        fromUserId: currentUser.id,
-      };
-
-      addFlyingEmoji(newFlyingEmoji);
-      sendEmoji(
-        userId,
-        selectedEmoji,
-        fromPosition,
-        targetPosition,
-        currentUser
-      );
+      sendEmoji(userId, selectedEmoji, isLeftSide, currentUser);
     },
-    [currentUser, selectedEmoji, sendEmoji, addFlyingEmoji]
+    [currentUser, selectedEmoji, sendEmoji]
   );
 
   const handleEmojiSelect = useCallback((emoji: string) => {

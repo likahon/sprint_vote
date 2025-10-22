@@ -21,40 +21,44 @@ export const useEmojiAnimation = ({
 
     const handleEmojiFlying = (data: {
       emoji: string;
-      fromPosition: { x: number; y: number };
-      toPosition: { x: number; y: number };
       fromUserId: string;
       fromUserName: string;
       toUserId: string;
       id: string;
+      fromLeftSide: boolean;
     }) => {
-      if (data.fromUserId !== currentUserId) {
-        const targetUserCardRef = userCardRefs.current[data.toUserId];
-        let localToPosition = data.toPosition;
+      const targetUserCardRef = userCardRefs.current[data.toUserId];
+      
+      if (!targetUserCardRef) return;
 
-        if (targetUserCardRef) {
-          const rect = targetUserCardRef.getBoundingClientRect();
-          localToPosition = {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-          };
-        }
+      const targetRect = targetUserCardRef.getBoundingClientRect();
+      const localToPosition = {
+        x: targetRect.left + targetRect.width / 2,
+        y: targetRect.top + targetRect.height / 2,
+      };
 
-        const newFlyingEmoji: FlyingEmojiData = {
-          id: data.id,
-          emoji: data.emoji,
-          fromPosition: data.fromPosition,
-          toPosition: localToPosition,
-          targetUserId: data.toUserId,
-          fromUserId: data.fromUserId,
-        };
+      const screenWidth = window.innerWidth;
+      const isLeftSide = data.fromLeftSide;
 
-        setFlyingEmojis((prev) => {
-          const alreadyExists = prev.some((e) => e.id === data.id);
-          if (alreadyExists) return prev;
-          return [...prev, newFlyingEmoji];
-        });
-      }
+      const localFromPosition = isLeftSide
+        ? { x: -20, y: targetRect.top + targetRect.height / 2 }
+        : { x: screenWidth + 20, y: targetRect.top + targetRect.height / 2 };
+
+      const newFlyingEmoji: FlyingEmojiData = {
+        id: data.id,
+        emoji: data.emoji,
+        fromPosition: localFromPosition,
+        toPosition: localToPosition,
+        targetUserId: data.toUserId,
+        fromUserId: data.fromUserId,
+        fromLeftSide: isLeftSide,
+      };
+
+      setFlyingEmojis((prev) => {
+        const alreadyExists = prev.some((e) => e.id === data.id);
+        if (alreadyExists) return prev;
+        return [...prev, newFlyingEmoji];
+      });
     };
 
     socket.on("emoji-flying", handleEmojiFlying);
@@ -63,10 +67,6 @@ export const useEmojiAnimation = ({
       socket.off("emoji-flying", handleEmojiFlying);
     };
   }, [socket, currentUserId, userCardRefs]);
-
-  const addFlyingEmoji = useCallback((emoji: FlyingEmojiData) => {
-    setFlyingEmojis((prev) => [...prev, emoji]);
-  }, []);
 
   const handleFlyingEmojiComplete = useCallback((emojiId: string) => {
     setFlyingEmojis((prev) => prev.filter((emoji) => emoji.id !== emojiId));
@@ -82,7 +82,6 @@ export const useEmojiAnimation = ({
   return {
     flyingEmojis,
     bouncingCard,
-    addFlyingEmoji,
     handleFlyingEmojiComplete,
     triggerCardBounce,
   };

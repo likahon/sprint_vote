@@ -192,12 +192,11 @@ io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
 
       const flyingEmojiData = {
         emoji: data.emoji,
-        fromPosition: data.fromPosition,
-        toPosition: data.toPosition,
         fromUserId: data.fromUserId,
         fromUserName: data.fromUserName,
         toUserId: data.toUserId,
-        id: data.id
+        id: data.id,
+        fromLeftSide: data.fromLeftSide
       };
       
       io.to(room.id).emit(SOCKET_EVENTS.EMOJI_FLYING, flyingEmojiData);

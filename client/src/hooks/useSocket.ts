@@ -95,7 +95,7 @@ export const useSocket = () => {
     }
   };
 
-  const sendEmoji = (toUserId: string, emoji: string, fromPosition: { x: number; y: number }, toPosition: { x: number; y: number }, fromUser?: User) => {
+  const sendEmoji = (toUserId: string, emoji: string, fromLeftSide: boolean, fromUser?: User) => {
     let user = fromUser || currentUser;
     
     if (!user && socket && (socket as any).auth?.userId && room) {
@@ -108,7 +108,7 @@ export const useSocket = () => {
     
     if (socket && user) {
       const emojiReaction: EmojiReaction = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random()}`,
         emoji,
         fromUserId: user.id,
         fromUserName: user.name,
@@ -118,8 +118,7 @@ export const useSocket = () => {
       
       const emojiData = {
         ...emojiReaction,
-        fromPosition,
-        toPosition
+        fromLeftSide
       };
       
       socket.emit('send-emoji', emojiData);

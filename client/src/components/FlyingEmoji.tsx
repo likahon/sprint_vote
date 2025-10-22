@@ -31,24 +31,19 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
     const duration = ANIMATION_CONFIG.EMOJI_FLIGHT_DURATION;
     const startTime = Date.now();
 
-    const distance = Math.sqrt(
-      Math.pow(toPosition.x - fromPosition.x, 2) +
-        Math.pow(toPosition.y - fromPosition.y, 2)
-    );
-    const flightTime = duration * 0.15;
-    const initialSpeed = (distance / flightTime) * 8;
-
     const angle = Math.atan2(
       toPosition.y - fromPosition.y,
       toPosition.x - fromPosition.x
     );
 
+    const initialSpeed = ANIMATION_CONFIG.EMOJI_INITIAL_SPEED;
+
     let velocityX = Math.cos(angle) * initialSpeed;
     let velocityY = Math.sin(angle) * initialSpeed;
 
-    const gravity = 0.2;
-    const bounceDamping = 0.7;
-    const friction = 0.95;
+    const gravity = ANIMATION_CONFIG.EMOJI_GRAVITY;
+    const bounceDamping = ANIMATION_CONFIG.EMOJI_BOUNCE_DAMPING;
+    const friction = ANIMATION_CONFIG.EMOJI_FRICTION;
 
     let currentX = fromPosition.x;
     let currentY = fromPosition.y;
