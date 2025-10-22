@@ -47,7 +47,7 @@ export const FixedEmojiSelector: React.FC<FixedEmojiSelectorProps> = ({
 
       {selectedEmoji && (
         <div className="emoji-instructions">
-          <p>💡 Haz clic en cualquier usuario para lanzarle el emoji</p>
+          <p>💡 Hacé clic en cualquier usuario para lanzarle el emoji</p>
         </div>
       )}
     </div>

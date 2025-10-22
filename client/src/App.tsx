@@ -11,15 +11,19 @@ function App() {
   const { room, currentUser, error, joinRoom, setCurrentUser, setError } =
     socketData;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const handleLogin = (name: string) => {
     joinRoom(name);
     setIsLoggedIn(true);
   };
 
+  const handleSettings = () => {
+    setShowSettingsModal(true);
+  };
+
   useEffect(() => {
     if (room && !currentUser) {
-      // Buscar el usuario actual en la sala
       const user = room.users.find((u) => u.socketId);
       if (user) {
         setCurrentUser(user);
@@ -74,11 +78,18 @@ function App() {
 
   return (
     <>
-      <Header showLeaveButton={true} onLeave={handleLeave} />
+      <Header
+        showLeaveButton={true}
+        onLeave={handleLeave}
+        onSettings={handleSettings}
+        showSettings={currentUser.isAdmin}
+      />
       <GameTable
         room={room}
         currentUser={currentUser}
         socketData={socketData}
+        showSettingsModal={showSettingsModal}
+        setShowSettingsModal={setShowSettingsModal}
       />
     </>
   );

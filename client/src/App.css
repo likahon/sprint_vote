@@ -206,6 +206,11 @@
   position: relative;
   box-shadow: var(--shadow-sm);
   max-width: 200px;
+  min-width: 150px;
+  width: 150px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-card.admin {
@@ -250,6 +255,7 @@
 .card {
   width: 70px;
   height: 100px;
+  min-height: 100px;
   margin: 0 auto 0.75rem;
   border-radius: var(--radius-lg);
   display: flex;
@@ -258,6 +264,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   transition: all 0.3s ease;
+  flex-shrink: 0;
   cursor: pointer;
   box-shadow: var(--shadow-md);
 }
@@ -306,6 +313,10 @@
   font-size: 1rem;
   color: var(--text-secondary);
   font-weight: 500;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Voting Options */
@@ -418,7 +429,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 3000;
   animation: fadeIn 0.3s ease-out;
   padding: 1rem;
 }
@@ -819,7 +830,6 @@
   opacity: 1;
 }
 
-/* Efecto de rebote cuando el emoji golpea la carta */
 .user-card.bouncing {
   animation: cardBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -947,6 +957,20 @@
 .emoji-display {
   font-size: 1.5rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-emoji-image {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.emoji-option .custom-emoji-image {
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .dropdown-arrow {
@@ -967,6 +991,7 @@
   z-index: 1000;
   margin-bottom: 0.5rem;
   animation: dropdownSlideUp 0.2s ease-out;
+  min-width: 350px;
 }
 
 @keyframes dropdownSlideUp {
@@ -980,10 +1005,50 @@
   }
 }
 
+.emoji-search-container {
+  margin-bottom: 0.75rem;
+}
+
+.emoji-search-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.emoji-search-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.emoji-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.no-emojis-found {
+  grid-column: 1 / -1;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
 .emoji-dropdown .emoji-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 0.5rem;
+  height: 300px;
+  min-height: 300px;
   max-height: 300px;
   overflow-y: auto;
   padding: 0.5rem;

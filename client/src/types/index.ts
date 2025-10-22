@@ -23,17 +23,35 @@ export interface Room {
   users: User[];
   votesRevealed: boolean;
   adminId?: string;
+  allowVoteChange?: boolean;
 }
 
-export const VOTE_OPTIONS = [
-  { value: '1', label: '1' },
-  { value: '3', label: '3' },
-  { value: '5', label: '5' },
-  { value: '8', label: '8' },
-  { value: '13', label: '13' }
-];
+export interface FlyingEmojiData {
+  id: string;
+  emoji: string;
+  fromPosition: Position;
+  toPosition: Position;
+  targetUserId: string;
+  fromUserId: string;
+}
+
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export interface VoteSummaryItem {
+  vote: string;
+  count: number;
+  percentage: number;
+}
+
+export { ANIMATION_CONFIG, VOTE_OPTIONS, UI_CONFIG, SERVER_CONFIG } from '../config/constants';
 
 export const EMOJI_OPTIONS = [
+  // 🏢 CLOUDVALLEY (Logo personalizado)
+  'cloudvalley',
+  
   // 😀 CARAS Y EMOCIONES
   '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂',
   '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩',
@@ -86,7 +104,7 @@ export const EMOJI_OPTIONS = [
   '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜',
   '🦟', '🦗', '🕷️', '🕸️', '🦂', '🐢', '🐍', '🦎',
   '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡',
-  '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅',
+  '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🦭', '🐊', '🐅',
   '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪',
   '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖',
   '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮',

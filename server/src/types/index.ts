@@ -23,6 +23,7 @@ export interface Room {
   users: User[];
   votesRevealed: boolean;
   adminId?: string;
+  allowVoteChange?: boolean;
 }
 
 export interface SocketEvents {

@@ -3,9 +3,15 @@ import "./HamburgerMenu.css";
 
 interface HamburgerMenuProps {
   onLeave?: () => void;
+  onSettings?: () => void;
+  showSettings?: boolean;
 }
 
-export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLeave }) => {
+export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+  onLeave,
+  onSettings,
+  showSettings,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -13,7 +19,6 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLeave }) => {
     setIsOpen(!isOpen);
   };
 
-  // Cerrar el menú al hacer clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -37,6 +42,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLeave }) => {
     }
   };
 
+  const handleSettings = () => {
+    setIsOpen(false);
+    if (onSettings) {
+      onSettings();
+    }
+  };
+
   return (
     <div className="hamburger-menu" ref={menuRef}>
       <button
@@ -52,6 +64,14 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLeave }) => {
 
       <div className={`menu-dropdown ${isOpen ? "open" : ""}`}>
         <ul className="menu-list">
+          {showSettings && onSettings && (
+            <li>
+              <button className="menu-item" onClick={handleSettings}>
+                <span className="menu-icon">⚙️</span>
+                <span className="menu-text">Settings</span>
+              </button>
+            </li>
+          )}
           {onLeave && (
             <li>
               <button className="menu-item" onClick={handleLeave}>

@@ -5,55 +5,48 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Room, EmojiReaction } from './types';
 import dotenv from 'dotenv';
+import { SERVER_CONFIG, SOCKET_EVENTS } from './config/constants';
+import { emitRoomUpdate, handleError } from './utils/socketHelpers';
 
-// Cargar variables de entorno
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || "http://localhost:3000",
+    origin: SERVER_CONFIG.SOCKET_CORS_ORIGIN,
     methods: ["GET", "POST"]
   }
 });
 
-// Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  origin: SERVER_CONFIG.CORS_ORIGIN,
   credentials: true
 }));
 app.use(express.json());
 
-// In-memory storage (no database needed)
 const users: Map<string, User> = new Map();
 const room: Room = {
-  id: 'global-room',
+  id: SERVER_CONFIG.GLOBAL_ROOM_ID,
   users: [],
   votesRevealed: false,
   adminId: undefined
 };
 
-// Socket.io connection handling
-io.on('connection', async (socket) => {
-  console.log('Usuario conectado:', socket.id);
+io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
 
-  socket.on('user-join', async (data: { name: string }) => {
+  socket.on(SOCKET_EVENTS.USER_JOIN, async (data: { name: string }) => {
     try {
       const { name } = data;
       const isAdmin = name.endsWith('_admin');
       const displayName = isAdmin ? name.replace('_admin', '') : name;
 
-      // Check if user already exists with this name
       const existingUser = room.users.find(u => u.name === displayName);
       
       if (existingUser) {
-        // Update existing user's socket ID
         existingUser.socketId = socket.id;
         users.set(socket.id, existingUser);
-        console.log('Updated existing user socket:', existingUser.name, 'socket:', socket.id);
       } else {
-        // Create new user
         const user: User = {
           id: uuidv4(),
           name: displayName,
@@ -66,98 +59,77 @@ io.on('connection', async (socket) => {
 
         users.set(socket.id, user);
         room.users.push(user);
-        console.log('Created new user:', user.name, 'socket:', socket.id);
       }
 
-      // Set admin if this is the first admin
       if (isAdmin && !room.adminId) {
         const currentUser = existingUser || room.users[room.users.length - 1];
         room.adminId = currentUser.id;
       }
 
-      // Join socket to room
       socket.join(room.id);
 
-      // Get the current user (either existing or new)
       const currentUser = existingUser || room.users[room.users.length - 1];
       
-      // Emit user joined event
-      socket.emit('user-joined', currentUser);
-
-      // Broadcast room update to all users
-      io.to(room.id).emit('room-update', room);
+      socket.emit(SOCKET_EVENTS.USER_JOINED, currentUser);
+      emitRoomUpdate(io, room, true);
 
     } catch (error) {
-      console.error('Error in user-join:', error);
-      socket.emit('error', { message: 'Error al unirse a la sala' });
+      handleError(socket, 'Error al unirse a la sala', error);
     }
   });
 
-  socket.on('user-vote', async (data: { userId: string; vote: string }) => {
+  socket.on(SOCKET_EVENTS.USER_VOTE, async (data: { userId: string; vote: string }) => {
     try {
-      console.log('Received user-vote event:', data);
       const { userId, vote } = data;
       
       const user = room.users.find(u => u.id === userId);
       if (!user) {
-        console.log('User not found for vote');
-        socket.emit('error', { message: 'Usuario no encontrado' });
+        handleError(socket, 'Usuario no encontrado');
         return;
       }
 
-      console.log('User found, updating vote:', user.name, 'vote:', vote);
+      if (!room.allowVoteChange && user.hasVoted) {
+        handleError(socket, 'Ya has votado. El admin debe habilitar "Desbloquear votos" para cambiar tu voto.');
+        return;
+      }
+
       user.hasVoted = true;
       user.vote = vote;
 
-      // Broadcast vote to all users
-      socket.to(room.id).emit('user-voted', userId);
-
-      // Update room
-      console.log('Broadcasting room update:', room);
-      io.to(room.id).emit('room-update', room);
+      socket.to(room.id).emit(SOCKET_EVENTS.USER_VOTED, userId);
+      emitRoomUpdate(io, room);
 
     } catch (error) {
-      console.error('Error in user-vote:', error);
-      socket.emit('error', { message: 'Error al votar' });
+      handleError(socket, 'Error al votar', error);
     }
   });
 
-  socket.on('reveal-votes', async () => {
+  socket.on(SOCKET_EVENTS.REVEAL_VOTES, async () => {
     try {
-      console.log('Received reveal-votes event from socket:', socket.id);
-      
-      // Check if there's an admin in the room
       const adminUser = room.users.find(u => u.isAdmin);
       if (!adminUser) {
-        console.log('No admin found in room');
-        socket.emit('error', { message: 'No hay administrador en la sala' });
+        handleError(socket, 'No hay administrador en la sala');
         return;
       }
 
-      console.log('Admin found:', adminUser.name, 'Revealing votes...');
       room.votesRevealed = true;
 
-      // Broadcast to all users
-      io.to(room.id).emit('votes-revealed', room);
-      io.to(room.id).emit('room-update', room);
-      console.log('Votes revealed and broadcasted');
+      io.to(room.id).emit(SOCKET_EVENTS.VOTES_REVEALED, room);
+      emitRoomUpdate(io, room, true);
 
     } catch (error) {
-      console.error('Error in reveal-votes:', error);
-      socket.emit('error', { message: 'Error al revelar votos' });
+      handleError(socket, 'Error al revelar votos', error);
     }
   });
 
-  socket.on('reset-votes', async () => {
+  socket.on(SOCKET_EVENTS.RESET_VOTES, async () => {
     try {
-      // Check if there's an admin in the room
       const adminUser = room.users.find(u => u.isAdmin);
       if (!adminUser) {
-        socket.emit('error', { message: 'No hay administrador en la sala' });
+        handleError(socket, 'No hay administrador en la sala');
         return;
       }
 
-      // Reset all users' votes
       room.users.forEach(user => {
         user.hasVoted = false;
         user.vote = undefined;
@@ -165,47 +137,46 @@ io.on('connection', async (socket) => {
 
       room.votesRevealed = false;
 
-      // Broadcast to all users
-      io.to(room.id).emit('votes-reset', room);
-      io.to(room.id).emit('room-update', room);
+      io.to(room.id).emit(SOCKET_EVENTS.VOTES_RESET, room);
+      emitRoomUpdate(io, room, true);
 
     } catch (error) {
-      console.error('Error in reset-votes:', error);
-      socket.emit('error', { message: 'Error al resetear votos' });
+      handleError(socket, 'Error al resetear votos', error);
     }
   });
 
-  socket.on('send-emoji', async (data: any) => {
+  socket.on(SOCKET_EVENTS.TOGGLE_ALLOW_VOTE_CHANGE, (data: { allow: boolean }) => {
     try {
-      console.log('⭐⭐⭐ NUEVO CODIGO CARGADO ⭐⭐⭐');
-      console.log('Received emoji:', data);
-      
-      console.log('🔍 Buscando fromUser con data.fromUserId:', data.fromUserId);
-      console.log('🔍 Usuarios en sala:', room.users.map(u => ({ id: u.id, socketId: u.socketId, name: u.name })));
-      
-      // Verificar que el usuario que envía el emoji existe (usar el ID del data, no el socket)
+      const user = room.users.find(u => u.socketId === socket.id);
+      if (!user || !user.isAdmin) {
+        handleError(socket, 'Solo el admin puede cambiar esta configuración');
+        return;
+      }
+
+      room.allowVoteChange = data.allow;
+      emitRoomUpdate(io, room, true);
+
+    } catch (error) {
+      handleError(socket, 'Error al cambiar configuración', error);
+    }
+  });
+
+  socket.on(SOCKET_EVENTS.SEND_EMOJI, (data: any) => {
+    try {
       const fromUser = room.users.find(u => u.id === data.fromUserId);
-      console.log('🔍 fromUser encontrado:', fromUser ? fromUser.name : 'NULL');
       
       if (!fromUser) {
-        console.log('❌ fromUser NO ENCONTRADO - RETORNANDO');
-        socket.emit('error', { message: 'Usuario no encontrado' });
+        handleError(socket, 'Usuario no encontrado');
         return;
       }
 
-      // Verificar que el usuario destinatario existe
       const toUser = room.users.find(u => u.id === data.toUserId);
-      console.log('🔍 toUser encontrado:', toUser ? toUser.name : 'NULL');
       
       if (!toUser) {
-        console.log('❌ toUser NO ENCONTRADO - RETORNANDO');
-        socket.emit('error', { message: 'Usuario destinatario no encontrado' });
+        handleError(socket, 'Usuario destinatario no encontrado');
         return;
       }
-      
-      console.log('✅ Ambos usuarios encontrados, continuando...');
 
-      // Agregar el emoji al usuario destinatario
       if (!toUser.emojis) {
         toUser.emojis = [];
       }
@@ -219,7 +190,6 @@ io.on('connection', async (socket) => {
       };
       toUser.emojis.push(emojiReaction);
 
-      // Broadcast el emoji con animación a todos los usuarios
       const flyingEmojiData = {
         emoji: data.emoji,
         fromPosition: data.fromPosition,
@@ -230,38 +200,24 @@ io.on('connection', async (socket) => {
         id: data.id
       };
       
-      console.log('🎯 Broadcasting emoji-flying to all users:', flyingEmojiData);
-      console.log('🎯 Room ID:', room.id);
-      console.log('🎯 Sockets in room:', await io.in(room.id).allSockets());
-      io.to(room.id).emit('emoji-flying', flyingEmojiData);
-      console.log('✅ emoji-flying emitted to room');
-
-      // También enviar el evento original para compatibilidad
-      io.to(room.id).emit('emoji-received', { emoji: emojiReaction });
-      console.log('✅ emoji-received emitted to room');
-
-      // Actualizar la sala
-      io.to(room.id).emit('room-update', room);
+      io.to(room.id).emit(SOCKET_EVENTS.EMOJI_FLYING, flyingEmojiData);
+      io.to(room.id).emit(SOCKET_EVENTS.EMOJI_RECEIVED, { emoji: emojiReaction });
+      emitRoomUpdate(io, room);
 
     } catch (error) {
-      console.error('Error in send-emoji:', error);
-      socket.emit('error', { message: 'Error al enviar emoji' });
+      handleError(socket, 'Error al enviar emoji', error);
     }
   });
 
-  socket.on('disconnect', async () => {
+  socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
     try {
-      console.log('Usuario desconectado:', socket.id);
-      
-      // Remove user from room
       const user = room.users.find(u => u.socketId === socket.id);
       if (user) {
         room.users = room.users.filter(u => u.id !== user.id);
         users.delete(socket.id);
       }
 
-      // Broadcast room update
-      io.to(room.id).emit('room-update', room);
+      emitRoomUpdate(io, room, true);
 
     } catch (error) {
       console.error('Error in disconnect:', error);
@@ -269,8 +225,6 @@ io.on('connection', async (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en puerto ${PORT}`);
-  console.log('Usando almacenamiento en memoria (sin base de datos)');
+server.listen(SERVER_CONFIG.PORT, () => {
+  console.log(`Servidor ejecutándose en puerto ${SERVER_CONFIG.PORT}`);
 });

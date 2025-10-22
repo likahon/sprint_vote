@@ -7,11 +7,15 @@ import logo from "../assets/cv-blanco.png";
 interface HeaderProps {
   onLeave?: () => void;
   showLeaveButton?: boolean;
+  onSettings?: () => void;
+  showSettings?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onLeave,
   showLeaveButton = false,
+  onSettings,
+  showSettings = false,
 }) => {
   return (
     <header className="app-header">
@@ -21,12 +25,18 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header-title">
-        <h1>Morsimesa de Planning</h1>
+        <h1>MorsiPlanning</h1>
       </div>
 
       <div className="header-actions">
         <ThemeToggle />
-        {showLeaveButton && <HamburgerMenu onLeave={onLeave} />}
+        {showLeaveButton && (
+          <HamburgerMenu
+            onLeave={onLeave}
+            onSettings={onSettings}
+            showSettings={showSettings}
+          />
+        )}
       </div>
     </header>
   );
