@@ -76,21 +76,7 @@ export const useSocket = () => {
       });
     });
 
-    newSocket.on('emoji-flying', (data: {
-      emoji: string;
-      fromPosition: { x: number; y: number };
-      toPosition: { x: number; y: number };
-      fromUserId: string;
-      fromUserName: string;
-      toUserId: string;
-      id: string;
-    }) => {
-      console.log('🎯 Received flying emoji from another user:', data);
-      console.log('🎯 Current user ID:', currentUser?.id);
-      console.log('🎯 From user ID:', data.fromUserId);
-      console.log('🎯 Should show animation:', data.fromUserId !== currentUser?.id);
-      // Este evento se manejará en el componente GameTable
-    });
+    // Eliminado: el evento emoji-flying se maneja en GameTable.tsx
 
     return () => {
       newSocket.close();
@@ -124,22 +110,59 @@ export const useSocket = () => {
     }
   };
 
-  const sendEmoji = (toUserId: string, emoji: string, fromPosition: { x: number; y: number }, toPosition: { x: number; y: number }) => {
-    if (socket && currentUser) {
+  const sendEmoji = (toUserId: string, emoji: string, fromPosition: { x: number; y: number }, toPosition: { x: number; y: number }, fromUser?: User) => {
+    console.log('🔍 sendEmoji called with:', {
+      toUserId,
+      emoji,
+      fromUserProvided: !!fromUser,
+      currentUserInHook: !!currentUser,
+      socketExists: !!socket
+    });
+    
+    // Intentar obtener el usuario de múltiples fuentes
+    let user = fromUser || currentUser;
+    
+    // Si aún no hay usuario, intentar obtenerlo del socket
+    if (!user && socket && (socket as any).auth?.userId && room) {
+      user = room.users.find(u => u.id === (socket as any).auth?.userId);
+      console.log('🔍 Found user from socket auth:', user);
+    }
+    
+    // Si aún no hay usuario, usar el ID del socket
+    if (!user && socket && socket.id && room) {
+      user = room.users.find(u => u.socketId === socket.id);
+      console.log('🔍 Found user from socket ID:', user);
+    }
+    
+    if (socket && user) {
       const emojiReaction: EmojiReaction = {
         id: Date.now().toString(),
         emoji,
-        fromUserId: currentUser.id,
-        fromUserName: currentUser.name,
+        fromUserId: user.id,
+        fromUserName: user.name,
         toUserId,
         timestamp: Date.now()
       };
       
-      // Enviar el emoji con las posiciones para la animación
-      socket.emit('send-emoji', {
+      const emojiData = {
         ...emojiReaction,
         fromPosition,
         toPosition
+      };
+      
+      console.log('🔥 CLIENT: Emitting send-emoji event to server:', emojiData);
+      console.log('🔥 CLIENT: Socket connected?', socket.connected);
+      console.log('🔥 CLIENT: Socket ID:', socket.id);
+      
+      // Enviar el emoji con las posiciones para la animación
+      socket.emit('send-emoji', emojiData);
+    } else {
+      console.error('❌ Cannot send emoji - socket or currentUser is null', {
+        socket: !!socket,
+        currentUser: !!user,
+        fromUserProvided: !!fromUser,
+        roomExists: !!room,
+        socketId: socket?.id
       });
     }
   };

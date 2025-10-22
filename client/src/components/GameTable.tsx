@@ -8,10 +8,15 @@ import cardLogo from "../assets/CV-Celeste.png";
 interface GameTableProps {
   room: Room;
   currentUser: User;
+  socketData: ReturnType<typeof useSocket>;
 }
 
-export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
-  const { vote, revealVotes, resetVotes, sendEmoji, socket } = useSocket();
+export const GameTable: React.FC<GameTableProps> = ({
+  room,
+  currentUser,
+  socketData,
+}) => {
+  const { vote, revealVotes, resetVotes, sendEmoji, socket } = socketData;
   const [selectedVote, setSelectedVote] = useState<string>("");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [flyingEmojis, setFlyingEmojis] = useState<
@@ -28,6 +33,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const userCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const prevVotesRevealed = useRef<boolean>(room.votesRevealed);
+  const lastClickTime = useRef<number>(0);
 
   // Debug: Log selectedEmoji state changes
   useEffect(() => {
@@ -51,7 +57,12 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
 
   // Escuchar emojis volando de otros usuarios
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log("❌ Socket not available in emoji-flying listener");
+      return;
+    }
+
+    console.log("✅ Setting up emoji-flying listener on socket:", socket.id);
 
     const handleEmojiFlying = (data: {
       emoji: string;
@@ -63,7 +74,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       id: string;
     }) => {
       console.log(
-        "🚀 GameTable received flying emoji from another user:",
+        "🚀🚀🚀 GameTable received flying emoji from another user:",
         data
       );
       console.log("🚀 Current user ID:", currentUser.id);
@@ -76,16 +87,39 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       // Solo mostrar la animación si no es del usuario actual
       if (data.fromUserId !== currentUser.id) {
         console.log("🚀 Adding flying emoji to state");
+
+        // Calcular el toPosition localmente usando la referencia de la carta
+        const targetUserCardRef = userCardRefs.current[data.toUserId];
+        let localToPosition = data.toPosition; // Fallback a la posición recibida
+
+        if (targetUserCardRef) {
+          const rect = targetUserCardRef.getBoundingClientRect();
+          localToPosition = {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+          console.log("🎯 Calculated local toPosition:", localToPosition);
+        } else {
+          console.log("⚠️ Target card ref not found, using received position");
+        }
+
         const newFlyingEmoji = {
           id: data.id,
           emoji: data.emoji,
           fromPosition: data.fromPosition,
-          toPosition: data.toPosition,
+          toPosition: localToPosition, // Usar la posición local
           targetUserId: data.toUserId,
           fromUserId: data.fromUserId,
         };
 
         setFlyingEmojis((prev) => {
+          // Verificar si el emoji ya existe (prevenir duplicados)
+          const alreadyExists = prev.some((e) => e.id === data.id);
+          if (alreadyExists) {
+            console.log("🚫 Emoji already exists, skipping:", data.id);
+            return prev;
+          }
+
           console.log("🚀 Previous flying emojis:", prev.length);
           console.log("🚀 Adding new emoji:", newFlyingEmoji);
           return [...prev, newFlyingEmoji];
@@ -96,8 +130,10 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     };
 
     socket.on("emoji-flying", handleEmojiFlying);
+    console.log("✅ emoji-flying listener registered successfully");
 
     return () => {
+      console.log("🧹 Cleaning up emoji-flying listener");
       socket.off("emoji-flying", handleEmojiFlying);
     };
   }, [socket, currentUser.id]);
@@ -123,6 +159,15 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
 
   const handleUserCardClick = (userId: string, event: React.MouseEvent) => {
     console.log("=== USER CARD CLICKED ===");
+
+    // Debounce: prevenir clics múltiples en menos de 300ms
+    const now = Date.now();
+    if (now - lastClickTime.current < 300) {
+      console.log("⛔ Click too fast, ignoring (debounce)");
+      return;
+    }
+    lastClickTime.current = now;
+
     console.log(
       "Clicked on user card:",
       userId,
@@ -150,8 +195,8 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
 
     const userCardRect = event.currentTarget.getBoundingClientRect();
     const targetPosition = {
-      x: event.clientX, // Coordenada X exacta del click del mouse
-      y: event.clientY, // Coordenada Y exacta del click del mouse
+      x: userCardRect.left + userCardRect.width / 2, // Centro de la carta
+      y: userCardRect.top + userCardRect.height / 2, // Centro de la carta
     };
 
     // Calcular posición de origen desde el costado de la pantalla
@@ -204,6 +249,11 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     };
 
     setFlyingEmojis((prev) => [...prev, newFlyingEmoji]);
+
+    // ¡IMPORTANTE! Enviar el emoji al servidor para que otros usuarios lo vean
+    console.log("⚡ CALLING sendEmoji to broadcast to other users");
+    console.log("⚡ Passing currentUser:", currentUser);
+    sendEmoji(userId, selectedEmoji, fromPosition, targetPosition, currentUser);
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -215,23 +265,8 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
   const handleFlyingEmojiComplete = (emojiId: string) => {
     console.log("Flying emoji animation completed for ID:", emojiId);
 
-    // Encontrar el emoji que completó su animación
-    const completedEmoji = flyingEmojis.find((emoji) => emoji.id === emojiId);
-    if (completedEmoji) {
-      // Solo enviar al servidor si es un emoji que lanzó el usuario actual
-      // Los emojis de otros usuarios ya fueron enviados por ellos
-      if (completedEmoji.fromUserId === currentUser.id) {
-        sendEmoji(
-          completedEmoji.targetUserId,
-          completedEmoji.emoji,
-          completedEmoji.fromPosition,
-          completedEmoji.toPosition
-        );
-      }
-
-      // Remover el emoji de la lista
-      setFlyingEmojis((prev) => prev.filter((emoji) => emoji.id !== emojiId));
-    }
+    // Remover el emoji de la lista (ya fue enviado al servidor cuando se hizo clic)
+    setFlyingEmojis((prev) => prev.filter((emoji) => emoji.id !== emojiId));
   };
 
   // Función para activar el rebote cuando el emoji choca

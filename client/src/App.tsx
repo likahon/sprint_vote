@@ -7,8 +7,9 @@ import { Header } from "./components/Header";
 import "./App.css";
 
 function App() {
+  const socketData = useSocket();
   const { room, currentUser, error, joinRoom, setCurrentUser, setError } =
-    useSocket();
+    socketData;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = (name: string) => {
@@ -74,7 +75,11 @@ function App() {
   return (
     <>
       <Header showLeaveButton={true} onLeave={handleLeave} />
-      <GameTable room={room} currentUser={currentUser} />
+      <GameTable
+        room={room}
+        currentUser={currentUser}
+        socketData={socketData}
+      />
     </>
   );
 }

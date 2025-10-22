@@ -175,32 +175,70 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('send-emoji', async (emoji: EmojiReaction) => {
+  socket.on('send-emoji', async (data: any) => {
     try {
-      console.log('Received emoji:', emoji);
+      console.log('⭐⭐⭐ NUEVO CODIGO CARGADO ⭐⭐⭐');
+      console.log('Received emoji:', data);
       
-      // Verificar que el usuario que envía el emoji existe
-      const fromUser = room.users.find(u => u.socketId === socket.id);
+      console.log('🔍 Buscando fromUser con data.fromUserId:', data.fromUserId);
+      console.log('🔍 Usuarios en sala:', room.users.map(u => ({ id: u.id, socketId: u.socketId, name: u.name })));
+      
+      // Verificar que el usuario que envía el emoji existe (usar el ID del data, no el socket)
+      const fromUser = room.users.find(u => u.id === data.fromUserId);
+      console.log('🔍 fromUser encontrado:', fromUser ? fromUser.name : 'NULL');
+      
       if (!fromUser) {
+        console.log('❌ fromUser NO ENCONTRADO - RETORNANDO');
         socket.emit('error', { message: 'Usuario no encontrado' });
         return;
       }
 
       // Verificar que el usuario destinatario existe
-      const toUser = room.users.find(u => u.id === emoji.toUserId);
+      const toUser = room.users.find(u => u.id === data.toUserId);
+      console.log('🔍 toUser encontrado:', toUser ? toUser.name : 'NULL');
+      
       if (!toUser) {
+        console.log('❌ toUser NO ENCONTRADO - RETORNANDO');
         socket.emit('error', { message: 'Usuario destinatario no encontrado' });
         return;
       }
+      
+      console.log('✅ Ambos usuarios encontrados, continuando...');
 
       // Agregar el emoji al usuario destinatario
       if (!toUser.emojis) {
         toUser.emojis = [];
       }
-      toUser.emojis.push(emoji);
+      const emojiReaction: EmojiReaction = {
+        id: data.id,
+        emoji: data.emoji,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        toUserId: data.toUserId,
+        timestamp: data.timestamp
+      };
+      toUser.emojis.push(emojiReaction);
 
-      // Broadcast el emoji a todos los usuarios
-      io.to(room.id).emit('emoji-received', { emoji });
+      // Broadcast el emoji con animación a todos los usuarios
+      const flyingEmojiData = {
+        emoji: data.emoji,
+        fromPosition: data.fromPosition,
+        toPosition: data.toPosition,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        toUserId: data.toUserId,
+        id: data.id
+      };
+      
+      console.log('🎯 Broadcasting emoji-flying to all users:', flyingEmojiData);
+      console.log('🎯 Room ID:', room.id);
+      console.log('🎯 Sockets in room:', await io.in(room.id).allSockets());
+      io.to(room.id).emit('emoji-flying', flyingEmojiData);
+      console.log('✅ emoji-flying emitted to room');
+
+      // También enviar el evento original para compatibilidad
+      io.to(room.id).emit('emoji-received', { emoji: emojiReaction });
+      console.log('✅ emoji-received emitted to room');
 
       // Actualizar la sala
       io.to(room.id).emit('room-update', room);
