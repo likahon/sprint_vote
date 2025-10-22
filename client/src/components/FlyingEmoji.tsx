@@ -86,11 +86,11 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
     let currentY = fromPosition.y;
     let hasHit = false;
     let bounceCount = 0;
-    const maxBounces = 3;
+    // const maxBounces = 3;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const deltaTime = 16; // Aproximadamente 60fps
+      // const deltaTime = 16; // Aproximadamente 60fps
 
       if (elapsed < duration) {
         // Solo log cada 100ms para no saturar la consola

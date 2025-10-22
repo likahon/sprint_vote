@@ -15,7 +15,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   position,
 }) => {
   const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  // const [isHovered, setIsHovered] = useState(false);
 
   console.log(
     "EmojiSelector render - isVisible:",

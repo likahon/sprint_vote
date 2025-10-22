@@ -3,6 +3,7 @@ import { Room, User, VOTE_OPTIONS } from "../types";
 import { useSocket } from "../hooks/useSocket";
 import { IntegratedEmojiSelector } from "./IntegratedEmojiSelector";
 import { FlyingEmoji } from "./FlyingEmoji";
+import cardLogo from "../assets/CV-Celeste.png";
 
 interface GameTableProps {
   room: Room;
@@ -26,6 +27,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
   const [bouncingCard, setBouncingCard] = useState<string | null>(null);
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const userCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const prevVotesRevealed = useRef<boolean>(room.votesRevealed);
 
   // Debug: Log selectedEmoji state changes
   useEffect(() => {
@@ -34,13 +36,17 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
     console.log("Type:", typeof selectedEmoji);
   }, [selectedEmoji]);
 
-  // Abrir modal automáticamente cuando se revelan las cartas
+  // Abrir modal automáticamente cuando se revelan las cartas (solo cuando cambia de false a true)
   useEffect(() => {
-    if (room.votesRevealed) {
+    if (!prevVotesRevealed.current && room.votesRevealed) {
+      // Solo abrir cuando cambia de false a true
       setShowSummaryModal(true);
-    } else {
+    } else if (!room.votesRevealed) {
+      // Cerrar cuando se resetean los votos
       setShowSummaryModal(false);
     }
+
+    prevVotesRevealed.current = room.votesRevealed;
   }, [room.votesRevealed]);
 
   // Escuchar emojis volando de otros usuarios
@@ -155,7 +161,7 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
 
     // Calcular desde qué lado viene el emoji
     const isLeftSide = userCardRect.left < screenWidth / 2;
-    const isTopSide = userCardRect.top < screenHeight / 2;
+    // const isTopSide = userCardRect.top < screenHeight / 2;
 
     let fromPosition;
 
@@ -308,7 +314,11 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
                     {user.vote && user.vote !== "?" ? user.vote : "?"}
                   </span>
                 ) : (
-                  <span className="card-back">🂠</span>
+                  <img
+                    src={cardLogo}
+                    alt="Card back"
+                    className="card-back-logo"
+                  />
                 )}
               </div>
               <div className="vote-status">{getVoteDisplay(user)}</div>
@@ -366,37 +376,47 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
                 return (
                   <>
                     <div className="votes-grid">
-                      {sortedVotes.map(({ vote, count, percentage }, index) => (
-                        <div
-                          key={vote}
-                          className={`vote-item ${
-                            index === 0 ? "most-voted" : ""
-                          }`}
-                        >
-                          <div className="vote-card">
-                            <span className="vote-value">{vote}</span>
+                      {sortedVotes.map(({ vote, count, percentage }, index) => {
+                        // Detectar si hay empate en el primer lugar
+                        const maxCount = sortedVotes[0].count;
+                        const tiedVotes = sortedVotes.filter(
+                          (v) => v.count === maxCount
+                        );
+                        const isTied = tiedVotes.length > 1;
+                        const isWinner = index === 0 && !isTied;
+
+                        return (
+                          <div
+                            key={vote}
+                            className={`vote-item ${
+                              index === 0 ? "most-voted" : ""
+                            }`}
+                          >
+                            <div className="vote-card">
+                              <span className="vote-value">{vote}</span>
+                            </div>
+                            <div className="vote-info">
+                              <div className="vote-count">
+                                {count} {count === 1 ? "voto" : "votos"}
+                              </div>
+                              <div className="vote-bar-container">
+                                <div
+                                  className="vote-bar"
+                                  style={{ width: `${percentage}%` }}
+                                ></div>
+                              </div>
+                              <div className="vote-percentage">
+                                {percentage.toFixed(0)}%
+                              </div>
+                            </div>
+                            {isWinner && (
+                              <div className="most-voted-badge">
+                                🏆 Más votada
+                              </div>
+                            )}
                           </div>
-                          <div className="vote-info">
-                            <div className="vote-count">
-                              {count} {count === 1 ? "voto" : "votos"}
-                            </div>
-                            <div className="vote-bar-container">
-                              <div
-                                className="vote-bar"
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                            <div className="vote-percentage">
-                              {percentage.toFixed(0)}%
-                            </div>
-                          </div>
-                          {index === 0 && sortedVotes.length > 1 && (
-                            <div className="most-voted-badge">
-                              🏆 Más votada
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     <div className="total-votes">
                       Total de votos: <strong>{totalVotes}</strong>
@@ -421,10 +441,6 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
       <div className="voting-options">
         <div className="voting-header">
           <h3>Selecciona tu carta:</h3>
-          <IntegratedEmojiSelector
-            selectedEmoji={selectedEmoji}
-            onEmojiSelect={handleEmojiSelect}
-          />
         </div>
         <div className="cards-grid">
           {VOTE_OPTIONS.map((option) => (
@@ -440,6 +456,18 @@ export const GameTable: React.FC<GameTableProps> = ({ room, currentUser }) => {
             </button>
           ))}
         </div>
+
+        {/* Selector de emojis */}
+        <div className="emoji-selector-container">
+          <span className="emoji-selector-label">
+            Seleccioná un emoji para lanzar:
+          </span>
+          <IntegratedEmojiSelector
+            selectedEmoji={selectedEmoji}
+            onEmojiSelect={handleEmojiSelect}
+          />
+        </div>
+
         {selectedEmoji && (
           <div className="emoji-instructions">
             <p>
