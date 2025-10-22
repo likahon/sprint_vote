@@ -136,7 +136,7 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
 
   if (!isVisible) return null;
 
-  const isCustomEmoji = emoji === 'cloudvalley';
+  const isCustomEmoji = emoji === "cloudvalley";
 
   return (
     <div
@@ -155,15 +155,15 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
       }}
     >
       {isCustomEmoji ? (
-        <img 
-          src={cloudvalleyLogo} 
-          alt="Cloudvalley" 
-          style={{ 
-            width: "24px", 
+        <img
+          src={cloudvalleyLogo}
+          alt="Cloudvalley"
+          style={{
+            width: "24px",
             height: "24px",
             objectFit: "contain",
-            filter: "drop-shadow(0 0 10px rgba(0,0,0,0.5))"
-          }} 
+            filter: "drop-shadow(0 0 10px rgba(0,0,0,0.5))",
+          }}
         />
       ) : (
         emoji

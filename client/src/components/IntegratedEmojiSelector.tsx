@@ -69,11 +69,11 @@ export const IntegratedEmojiSelector: React.FC<
   };
 
   const renderEmoji = (emoji: string, className: string = "") => {
-    if (emoji === 'cloudvalley') {
+    if (emoji === "cloudvalley") {
       return (
-        <img 
-          src={cloudvalleyLogo} 
-          alt="Cloudvalley" 
+        <img
+          src={cloudvalleyLogo}
+          alt="Cloudvalley"
           className={`custom-emoji-image ${className}`}
         />
       );

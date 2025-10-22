@@ -45,7 +45,9 @@ export const GameTable: React.FC<GameTableProps> = ({
     toggleAllowVoteChange,
   } = socketData;
   const [selectedVote, setSelectedVote] = useState<string>("");
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>("cloudvalley");
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(
+    "cloudvalley"
+  );
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const userCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const prevVotesRevealed = useRef<boolean>(room.votesRevealed);
@@ -283,17 +285,17 @@ export const GameTable: React.FC<GameTableProps> = ({
           <div className="emoji-instructions">
             <p>
               💡 Hacé clic en cualquier usuario para lanzarle{" "}
-              {selectedEmoji === 'cloudvalley' ? (
-                <img 
-                  src={cloudvalleyLogo} 
-                  alt="Cloudvalley" 
-                  style={{ 
-                    width: "1.25rem", 
-                    height: "1.25rem", 
+              {selectedEmoji === "cloudvalley" ? (
+                <img
+                  src={cloudvalleyLogo}
+                  alt="Cloudvalley"
+                  style={{
+                    width: "1.25rem",
+                    height: "1.25rem",
                     verticalAlign: "middle",
                     display: "inline-block",
-                    marginLeft: "0.25rem"
-                  }} 
+                    marginLeft: "0.25rem",
+                  }}
                 />
               ) : (
                 `el emoji ${selectedEmoji}`
