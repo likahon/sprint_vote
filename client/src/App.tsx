@@ -2,16 +2,29 @@ import { useState, useEffect } from "react";
 import { useSocket } from "./hooks/useSocket";
 import { LoginScreen } from "./components/LoginScreen";
 import { GameTable } from "./components/GameTable";
+import { Chat } from "./components/Chat";
+import { UserManagementModal } from "./components/UserManagementModal";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Header } from "./components/Header";
+import { UserRole } from "./types";
 import "./App.css";
 
 function App() {
   const socketData = useSocket();
-  const { room, currentUser, error, joinRoom, setCurrentUser, setError } =
-    socketData;
+  const {
+    room,
+    currentUser,
+    error,
+    messages,
+    joinRoom,
+    sendChatMessage,
+    setCurrentUser,
+    setError,
+  } = socketData;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showUsersModal, setShowUsersModal] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleLogin = (name: string) => {
     joinRoom(name);
@@ -20,6 +33,16 @@ function App() {
 
   const handleSettings = () => {
     setShowSettingsModal(true);
+  };
+
+  const handleUsers = () => {
+    setShowUsersModal(true);
+  };
+
+  const handleChangeRole = (userId: string, role: UserRole) => {
+    if (socketData.socket) {
+      socketData.socket.emit("change-user-role", { userId, role });
+    }
   };
 
   useEffect(() => {
@@ -83,6 +106,8 @@ function App() {
         onLeave={handleLeave}
         onSettings={handleSettings}
         showSettings={currentUser.isAdmin}
+        onUsers={handleUsers}
+        showUsers={currentUser.isAdmin}
       />
       <GameTable
         room={room}
@@ -90,6 +115,21 @@ function App() {
         socketData={socketData}
         showSettingsModal={showSettingsModal}
         setShowSettingsModal={setShowSettingsModal}
+      />
+      <UserManagementModal
+        isOpen={showUsersModal}
+        onClose={() => setShowUsersModal(false)}
+        users={room.users}
+        currentUserId={currentUser.id}
+        onChangeRole={handleChangeRole}
+      />
+      <Chat
+        messages={messages}
+        currentUserId={currentUser.id}
+        currentUserName={currentUser.name}
+        onSendMessage={sendChatMessage}
+        isOpen={isChatOpen}
+        onToggle={() => setIsChatOpen(!isChatOpen)}
       />
     </>
   );

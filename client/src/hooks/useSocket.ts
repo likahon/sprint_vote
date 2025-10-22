@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Room, User, EmojiReaction, SERVER_CONFIG } from '../types';
+import { Room, User, EmojiReaction, ChatMessage, SERVER_CONFIG } from '../types';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     const newSocket = io(SERVER_CONFIG.LOCAL_URL, {
@@ -64,6 +65,10 @@ export const useSocket = () => {
           users: updatedUsers
         };
       });
+    });
+
+    newSocket.on('chat-message', (message: ChatMessage) => {
+      setMessages(prevMessages => [...prevMessages, message]);
     });
 
     return () => {
@@ -131,17 +136,32 @@ export const useSocket = () => {
     }
   };
 
+  const sendChatMessage = (message: string) => {
+    if (socket && currentUser) {
+      const chatMessage: ChatMessage = {
+        id: `${Date.now()}-${Math.random()}`,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        message,
+        timestamp: Date.now(),
+      };
+      socket.emit('send-chat-message', chatMessage);
+    }
+  };
+
   return {
     socket,
     room,
     currentUser,
     error,
+    messages,
     joinRoom,
     vote,
     revealVotes,
     resetVotes,
     sendEmoji,
     toggleAllowVoteChange,
+    sendChatMessage,
     setCurrentUser,
     setError
   };

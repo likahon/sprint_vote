@@ -1,7 +1,10 @@
+export type UserRole = 'Admin' | 'Co Admin' | 'Dev' | 'Product Owner' | 'Observer';
+
 export interface User {
   id: string;
   name: string;
   isAdmin: boolean;
+  role: UserRole;
   hasVoted: boolean;
   vote?: string;
   socketId?: string;
@@ -45,6 +48,14 @@ export interface VoteSummaryItem {
   vote: string;
   count: number;
   percentage: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  message: string;
+  timestamp: number;
 }
 
 export { ANIMATION_CONFIG, VOTE_OPTIONS, UI_CONFIG, SERVER_CONFIG } from '../config/constants';

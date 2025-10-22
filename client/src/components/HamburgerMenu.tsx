@@ -5,12 +5,16 @@ interface HamburgerMenuProps {
   onLeave?: () => void;
   onSettings?: () => void;
   showSettings?: boolean;
+  onUsers?: () => void;
+  showUsers?: boolean;
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onLeave,
   onSettings,
   showSettings,
+  onUsers,
+  showUsers,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -49,6 +53,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     }
   };
 
+  const handleUsers = () => {
+    setIsOpen(false);
+    if (onUsers) {
+      onUsers();
+    }
+  };
+
   return (
     <div className="hamburger-menu" ref={menuRef}>
       <button
@@ -64,6 +75,14 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
       <div className={`menu-dropdown ${isOpen ? "open" : ""}`}>
         <ul className="menu-list">
+          {showUsers && onUsers && (
+            <li>
+              <button className="menu-item" onClick={handleUsers}>
+                <span className="menu-icon">👥</span>
+                <span className="menu-text">Usuarios</span>
+              </button>
+            </li>
+          )}
           {showSettings && onSettings && (
             <li>
               <button className="menu-item" onClick={handleSettings}>

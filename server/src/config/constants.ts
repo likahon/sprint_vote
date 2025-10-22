@@ -21,6 +21,10 @@ export const SOCKET_EVENTS = {
   EMOJI_RECEIVED: 'emoji-received',
   ROOM_UPDATE: 'room-update',
   TOGGLE_ALLOW_VOTE_CHANGE: 'toggle-allow-vote-change',
+  SEND_CHAT_MESSAGE: 'send-chat-message',
+  CHAT_MESSAGE: 'chat-message',
+  CHANGE_USER_ROLE: 'change-user-role',
+  USER_ROLE_CHANGED: 'user-role-changed',
   ERROR: 'error',
 } as const;
 

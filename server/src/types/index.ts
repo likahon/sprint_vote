@@ -1,7 +1,10 @@
+export type UserRole = 'Admin' | 'Co Admin' | 'Dev' | 'Product Owner' | 'Observer';
+
 export interface User {
   id: string;
   name: string;
   isAdmin: boolean;
+  role: UserRole;
   hasVoted: boolean;
   vote?: string;
   socketId?: string;

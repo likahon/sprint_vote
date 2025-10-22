@@ -9,6 +9,8 @@ interface HeaderProps {
   showLeaveButton?: boolean;
   onSettings?: () => void;
   showSettings?: boolean;
+  onUsers?: () => void;
+  showUsers?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   showLeaveButton = false,
   onSettings,
   showSettings = false,
+  onUsers,
+  showUsers = false,
 }) => {
   return (
     <header className="app-header">
@@ -35,6 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
             onLeave={onLeave}
             onSettings={onSettings}
             showSettings={showSettings}
+            onUsers={onUsers}
+            showUsers={showUsers}
           />
         )}
       </div>

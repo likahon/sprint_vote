@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import { User, IUser } from './models/User';
 import { Room, IRoom } from './models/Room';
-import { User as UserType, Room as RoomType, EmojiReaction } from './types';
+import { User as UserType, Room as RoomType, EmojiReaction, UserRole } from './types';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -45,6 +45,7 @@ const convertUser = (user: IUser): UserType => ({
   id: user.id,
   name: user.name,
   isAdmin: user.isAdmin,
+  role: (user.role || (user.isAdmin ? 'Admin' : 'Dev')) as UserRole,
   hasVoted: user.hasVoted,
   vote: user.vote,
   socketId: user.socketId,

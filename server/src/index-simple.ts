@@ -51,6 +51,7 @@ io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
           id: uuidv4(),
           name: displayName,
           isAdmin,
+          role: isAdmin ? 'Admin' : 'Dev',
           hasVoted: false,
           socketId: socket.id,
           roomId: room.id,
@@ -78,37 +79,42 @@ io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
     }
   });
 
-  socket.on(SOCKET_EVENTS.USER_VOTE, async (data: { userId: string; vote: string }) => {
-    try {
-      const { userId, vote } = data;
-      
-      const user = room.users.find(u => u.id === userId);
-      if (!user) {
-        handleError(socket, 'Usuario no encontrado');
-        return;
+    socket.on(SOCKET_EVENTS.USER_VOTE, async (data: { userId: string; vote: string }) => {
+      try {
+        const { userId, vote } = data;
+        
+        const user = room.users.find(u => u.id === userId);
+        if (!user) {
+          handleError(socket, 'Usuario no encontrado');
+          return;
+        }
+
+        if (user.role === 'Product Owner' || user.role === 'Observer') {
+          handleError(socket, 'Tu rol no te permite votar');
+          return;
+        }
+
+        if (!room.allowVoteChange && user.hasVoted) {
+          handleError(socket, 'Ya has votado. El admin debe habilitar "Desbloquear votos" para cambiar tu voto.');
+          return;
+        }
+
+        user.hasVoted = true;
+        user.vote = vote;
+
+        socket.to(room.id).emit(SOCKET_EVENTS.USER_VOTED, userId);
+        emitRoomUpdate(io, room);
+
+      } catch (error) {
+        handleError(socket, 'Error al votar', error);
       }
-
-      if (!room.allowVoteChange && user.hasVoted) {
-        handleError(socket, 'Ya has votado. El admin debe habilitar "Desbloquear votos" para cambiar tu voto.');
-        return;
-      }
-
-      user.hasVoted = true;
-      user.vote = vote;
-
-      socket.to(room.id).emit(SOCKET_EVENTS.USER_VOTED, userId);
-      emitRoomUpdate(io, room);
-
-    } catch (error) {
-      handleError(socket, 'Error al votar', error);
-    }
-  });
+    });
 
   socket.on(SOCKET_EVENTS.REVEAL_VOTES, async () => {
     try {
-      const adminUser = room.users.find(u => u.isAdmin);
-      if (!adminUser) {
-        handleError(socket, 'No hay administrador en la sala');
+      const user = room.users.find(u => u.socketId === socket.id);
+      if (!user || (user.role !== 'Admin' && user.role !== 'Co Admin')) {
+        handleError(socket, 'No tienes permisos para revelar votos');
         return;
       }
 
@@ -124,9 +130,9 @@ io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
 
   socket.on(SOCKET_EVENTS.RESET_VOTES, async () => {
     try {
-      const adminUser = room.users.find(u => u.isAdmin);
-      if (!adminUser) {
-        handleError(socket, 'No hay administrador en la sala');
+      const user = room.users.find(u => u.socketId === socket.id);
+      if (!user || (user.role !== 'Admin' && user.role !== 'Co Admin')) {
+        handleError(socket, 'No tienes permisos para resetear votos');
         return;
       }
 
@@ -205,6 +211,45 @@ io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
 
     } catch (error) {
       handleError(socket, 'Error al enviar emoji', error);
+    }
+  });
+
+  socket.on(SOCKET_EVENTS.SEND_CHAT_MESSAGE, (message: any) => {
+    try {
+      io.to(room.id).emit(SOCKET_EVENTS.CHAT_MESSAGE, message);
+    } catch (error) {
+      handleError(socket, 'Error al enviar mensaje', error);
+    }
+  });
+
+  socket.on(SOCKET_EVENTS.CHANGE_USER_ROLE, (data: { userId: string; role: string }) => {
+    try {
+      const adminUser = room.users.find(u => u.socketId === socket.id);
+      if (!adminUser || !adminUser.isAdmin) {
+        handleError(socket, 'Solo el administrador puede cambiar roles');
+        return;
+      }
+
+      const targetUser = room.users.find(u => u.id === data.userId);
+      if (!targetUser) {
+        handleError(socket, 'Usuario no encontrado');
+        return;
+      }
+
+      targetUser.role = data.role as any;
+      
+      if (data.role === 'Admin') {
+        targetUser.isAdmin = true;
+      } else if (data.role === 'Co Admin') {
+        targetUser.isAdmin = false;
+      } else {
+        targetUser.isAdmin = false;
+      }
+
+      emitRoomUpdate(io, room, true);
+      io.to(room.id).emit(SOCKET_EVENTS.USER_ROLE_CHANGED, { userId: data.userId, role: data.role });
+    } catch (error) {
+      handleError(socket, 'Error al cambiar rol', error);
     }
   });
 

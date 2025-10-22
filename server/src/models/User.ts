@@ -4,6 +4,7 @@ export interface IUser extends Document {
   id: string;
   name: string;
   isAdmin: boolean;
+  role: string;
   hasVoted: boolean;
   vote?: string;
   socketId?: string;
@@ -22,6 +23,7 @@ const UserSchema = new Schema<IUser>({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
+  role: { type: String, default: 'Dev' },
   hasVoted: { type: Boolean, default: false },
   vote: { type: String },
   socketId: { type: String },

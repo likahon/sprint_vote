@@ -75,14 +75,20 @@ export const GameTable: React.FC<GameTableProps> = ({
     }
   }, [currentUser.hasVoted]);
 
+  const canVote =
+    currentUser.role !== "Product Owner" && currentUser.role !== "Observer";
+  const canManageVotes =
+    currentUser.role === "Admin" || currentUser.role === "Co Admin";
+
   const handleVote = useCallback(
     (voteValue: string) => {
+      if (!canVote) return;
       if (room.allowVoteChange || !currentUser.hasVoted) {
         setSelectedVote(voteValue);
         vote(currentUser.id, voteValue);
       }
     },
-    [room.allowVoteChange, currentUser.hasVoted, currentUser.id, vote]
+    [canVote, room.allowVoteChange, currentUser.hasVoted, currentUser.id, vote]
   );
 
   const handleRevealVotes = useCallback(() => {
@@ -129,17 +135,19 @@ export const GameTable: React.FC<GameTableProps> = ({
     [room.votesRevealed]
   );
 
-  const canReset = currentUser.isAdmin && room.votesRevealed;
-  const canReveal = currentUser.isAdmin && !room.votesRevealed;
+  const canReset = canManageVotes && room.votesRevealed;
+  const canReveal = canManageVotes && !room.votesRevealed;
 
   const voteSummary = useMemo(() => {
     const voteCounts: { [key: string]: number } = {};
     let totalVotes = 0;
 
     room.users.forEach((user) => {
-      if (user.vote && user.vote !== "?") {
-        voteCounts[user.vote] = (voteCounts[user.vote] || 0) + 1;
-        totalVotes++;
+      if (user.role !== "Product Owner" && user.role !== "Observer") {
+        if (user.vote && user.vote !== "?") {
+          voteCounts[user.vote] = (voteCounts[user.vote] || 0) + 1;
+          totalVotes++;
+        }
       }
     });
 
@@ -218,6 +226,14 @@ export const GameTable: React.FC<GameTableProps> = ({
         <div className="voting-header">
           <h3>Selecciona tu carta:</h3>
         </div>
+        {!canVote && (
+          <div className="role-voting-restriction">
+            <p>
+              ⚠️ Tu rol no te permite votar. Solo puedes observar las
+              votaciones.
+            </p>
+          </div>
+        )}
         <div className="cards-grid">
           {VOTE_OPTIONS.map((option) => (
             <button
@@ -226,9 +242,10 @@ export const GameTable: React.FC<GameTableProps> = ({
                 selectedVote === option.value ? "selected" : ""
               } ${
                 currentUser.hasVoted && !room.allowVoteChange ? "disabled" : ""
-              }`}
+              } ${!canVote ? "role-disabled" : ""}`}
               onClick={() => handleVote(option.value)}
               disabled={
+                !canVote ||
                 room.votesRevealed ||
                 (currentUser.hasVoted && !room.allowVoteChange)
               }

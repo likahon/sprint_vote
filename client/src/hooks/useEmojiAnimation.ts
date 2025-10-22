@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Socket } from "socket.io-client";
 import { FlyingEmojiData, ANIMATION_CONFIG } from "../types";
 
