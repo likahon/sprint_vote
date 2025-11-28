@@ -27,7 +27,12 @@ export const UI_CONFIG = {
 
 export const SERVER_CONFIG = {
   LOCAL_URL: 'http://localhost:3001',
+  PRODUCTION_URL: window.location.origin,
   RECONNECTION_ATTEMPTS: 5,
   RECONNECTION_DELAY: 1000,
 } as const;
+
+export const getServerUrl = () => {
+  return import.meta.env.PROD ? SERVER_CONFIG.PRODUCTION_URL : SERVER_CONFIG.LOCAL_URL;
+};
 

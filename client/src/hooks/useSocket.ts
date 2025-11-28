@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Room, User, EmojiReaction, ChatMessage, SERVER_CONFIG } from '../types';
+import { Room, User, EmojiReaction, ChatMessage } from '../types';
+import { getServerUrl, SERVER_CONFIG } from '../config/constants';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -10,7 +11,7 @@ export const useSocket = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const newSocket = io(SERVER_CONFIG.LOCAL_URL, {
+    const newSocket = io(getServerUrl(), {
       reconnectionAttempts: SERVER_CONFIG.RECONNECTION_ATTEMPTS,
       reconnectionDelay: SERVER_CONFIG.RECONNECTION_DELAY,
     });

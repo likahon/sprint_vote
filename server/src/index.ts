@@ -5,6 +5,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
+import path from 'path';
 import { User, IUser } from './models/User';
 import { Room, IRoom } from './models/Room';
 import { User as UserType, Room as RoomType, EmojiReaction, UserRole } from './types';
@@ -27,6 +28,15 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Serve static files from client build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
 
 // MongoDB connection - Using MongoDB Atlas or local fallback
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://demo:demo123@cluster0.mongodb.net/planning-poker?retryWrites=true&w=majority';
