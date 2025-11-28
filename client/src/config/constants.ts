@@ -33,6 +33,6 @@ export const SERVER_CONFIG = {
 } as const;
 
 export const getServerUrl = () => {
-  return import.meta.env.PROD ? SERVER_CONFIG.PRODUCTION_URL : SERVER_CONFIG.LOCAL_URL;
+  return (import.meta as any).env.PROD ? SERVER_CONFIG.PRODUCTION_URL : SERVER_CONFIG.LOCAL_URL;
 };
 

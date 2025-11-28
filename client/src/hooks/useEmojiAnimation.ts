@@ -5,7 +5,7 @@ import { FlyingEmojiData, ANIMATION_CONFIG } from "../types";
 interface UseEmojiAnimationProps {
   socket: Socket | null;
   currentUserId: string;
-  userCardRefs: React.MutableRefObject<{ [key: string]: HTMLDivElement | null }>;
+  userCardRefs: any;
 }
 
 export const useEmojiAnimation = ({
