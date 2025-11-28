@@ -2,7 +2,7 @@
   "name": "sprint-vote-planning-poker",
   "version": "1.0.0",
   "description": "Aplicación de Planning Poker para estimación de historias de usuario en sprints",
-  "main": "server/dist/index.js",
+  "main": "server/dist/index-simple.js",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "cd server && npm run dev",

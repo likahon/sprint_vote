@@ -1,7 +1,8 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import cors from 'cors';
+
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Room, EmojiReaction } from './types';
 import dotenv from 'dotenv';
@@ -12,18 +13,18 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: SERVER_CONFIG.SOCKET_CORS_ORIGIN,
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
 
-app.use(cors({
-  origin: SERVER_CONFIG.CORS_ORIGIN,
-  credentials: true
-}));
 app.use(express.json());
+
+// Serve static files from client build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
 
 const users: Map<string, User> = new Map();
 const room: Room = {
