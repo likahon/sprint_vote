@@ -14,7 +14,7 @@
     "start": "cd server && npm start",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install && npm audit fix",
     "clean": "rm -rf node_modules server/node_modules client/node_modules server/dist client/dist",
-    "render-build": "npm install && cd server && npm install && cd ../client && npm install && npm run build && cd ../server && npm run build"
+    "render-build": "npm ci && cd server && npm ci && cd ../client && npm ci && npm run build && cd ../server && npm run build"
   },
   "keywords": [
     "planning-poker",
