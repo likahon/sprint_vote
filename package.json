@@ -12,7 +12,7 @@
     "server:build": "cd server && npm run build",
     "client:build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install && npm audit fix",
     "clean": "rm -rf node_modules server/node_modules client/node_modules server/dist client/dist",
     "render-build": "npm run install:all && npm run build"
   },
