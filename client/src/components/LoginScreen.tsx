@@ -20,9 +20,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         <div className="login-header">
           <h1>🃏 MorsiPlanning</h1>
           <p>Ingresa tu nombre para comenzar</p>
-          <p className="admin-hint">
+          {/* <p className="admin-hint">
             Para ser administrador, agrega "_admin" al final de tu nombre
-          </p>
+          </p> */}
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
