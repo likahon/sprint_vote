@@ -8,12 +8,14 @@ import React, {
 import { Room, User, VOTE_OPTIONS, ANIMATION_CONFIG } from "../types";
 import { useSocket } from "../hooks/useSocket";
 import { useEmojiAnimation } from "../hooks/useEmojiAnimation";
+import { useTheme } from "../contexts/ThemeContext";
 import { IntegratedEmojiSelector } from "./IntegratedEmojiSelector";
 import { FlyingEmoji } from "./FlyingEmoji";
 import { VoteSummaryModal } from "./VoteSummaryModal";
 import { SettingsModal } from "./SettingsModal";
-import cardLogo from "../assets/CV-Celeste.png";
-import cloudvalleyLogo from "../assets/CV-Celeste.png";
+import cardLogoDark from "../assets/logo_dark.svg";
+import cardLogoLight from "../assets/logo_light.png";
+import cloudvalleyLogo from "../assets/logo_dark.svg";
 
 interface GameTableProps {
   room: Room;
@@ -21,6 +23,8 @@ interface GameTableProps {
   socketData: ReturnType<typeof useSocket>;
   showSettingsModal: boolean;
   setShowSettingsModal: (show: boolean) => void;
+  selectedEmoji: string | null;
+  onEmojiSelect: (emoji: string) => void;
 }
 
 export const GameTable: React.FC<GameTableProps> = ({
@@ -29,7 +33,11 @@ export const GameTable: React.FC<GameTableProps> = ({
   socketData,
   showSettingsModal,
   setShowSettingsModal,
+  selectedEmoji,
+  onEmojiSelect,
 }) => {
+  const { theme } = useTheme();
+  const cardLogo = theme === "dark" ? cardLogoDark : cardLogoLight;
   const {
     vote,
     revealVotes,
@@ -39,9 +47,6 @@ export const GameTable: React.FC<GameTableProps> = ({
     toggleAllowVoteChange,
   } = socketData;
   const [selectedVote, setSelectedVote] = useState<string>("");
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(
-    "cloudvalley"
-  );
   const [showSummaryModal, setShowSummaryModal] = useState<boolean>(false);
   const userCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const prevVotesRevealed = useRef<boolean>(room.votesRevealed);
@@ -88,7 +93,7 @@ export const GameTable: React.FC<GameTableProps> = ({
         vote(currentUser.id, voteValue);
       }
     },
-    [canVote, room.allowVoteChange, currentUser.hasVoted, currentUser.id, vote]
+    [canVote, room.allowVoteChange, currentUser.hasVoted, currentUser.id, vote],
   );
 
   const handleRevealVotes = useCallback(() => {
@@ -115,12 +120,15 @@ export const GameTable: React.FC<GameTableProps> = ({
 
       sendEmoji(userId, selectedEmoji, isLeftSide, currentUser);
     },
-    [currentUser, selectedEmoji, sendEmoji]
+    [currentUser, selectedEmoji, sendEmoji],
   );
 
-  const handleEmojiSelect = useCallback((emoji: string) => {
-    setSelectedEmoji(emoji);
-  }, []);
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      onEmojiSelect(emoji);
+    },
+    [onEmojiSelect],
+  );
 
   const getVoteDisplay = useCallback(
     (user: User) => {
@@ -132,7 +140,7 @@ export const GameTable: React.FC<GameTableProps> = ({
         return "⏳";
       }
     },
-    [room.votesRevealed]
+    [room.votesRevealed],
   );
 
   const canReset = canManageVotes && room.votesRevealed;
@@ -221,11 +229,8 @@ export const GameTable: React.FC<GameTableProps> = ({
         onToggleAllowVoteChange={toggleAllowVoteChange}
       />
 
-      {/* Opciones de votación */}
+      {/* Cartas de votación */}
       <div className="voting-options">
-        <div className="voting-header">
-          <h3>Selecciona tu carta:</h3>
-        </div>
         {!canVote && (
           <div className="role-voting-restriction">
             <p>
@@ -240,8 +245,6 @@ export const GameTable: React.FC<GameTableProps> = ({
               key={option.value}
               className={`card-option ${
                 selectedVote === option.value ? "selected" : ""
-              } ${
-                currentUser.hasVoted && !room.allowVoteChange ? "disabled" : ""
               } ${!canVote ? "role-disabled" : ""}`}
               onClick={() => handleVote(option.value)}
               disabled={
@@ -254,56 +257,14 @@ export const GameTable: React.FC<GameTableProps> = ({
             </button>
           ))}
         </div>
-
-        {/* Selector de emojis */}
-        <div className="emoji-selector-container">
-          <span className="emoji-selector-label">
-            Seleccioná un emoji para lanzar:
-          </span>
-          <IntegratedEmojiSelector
-            selectedEmoji={selectedEmoji}
-            onEmojiSelect={handleEmojiSelect}
-          />
-        </div>
-
-        {selectedEmoji && (
-          <div className="emoji-instructions">
-            <p>
-              💡 Hacé clic en cualquier usuario para lanzarle{" "}
-              {selectedEmoji === "cloudvalley" ? (
-                <img
-                  src={cloudvalleyLogo}
-                  alt="Cloudvalley"
-                  style={{
-                    width: "1.25rem",
-                    height: "1.25rem",
-                    verticalAlign: "middle",
-                    display: "inline-block",
-                    marginLeft: "0.25rem",
-                  }}
-                />
-              ) : (
-                `el emoji ${selectedEmoji}`
-              )}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Controles de admin */}
-      {currentUser.isAdmin && (
-        <div className="admin-controls">
-          {canReveal && (
-            <button className="reveal-btn" onClick={handleRevealVotes}>
-              🃏 Revelar Votaciones
-            </button>
-          )}
-
-          {canReset && (
-            <button className="reset-btn" onClick={handleResetVotes}>
-              🔄 Reiniciar
-            </button>
-          )}
+      {canReveal && (
+        <div className="admin-controls-compact">
+          <button className="reveal-btn" onClick={handleRevealVotes}>
+            🃏 Revelar Votaciones
+          </button>
         </div>
       )}
 

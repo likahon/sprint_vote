@@ -1,17 +1,22 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { EMOJI_OPTIONS } from "../types";
 import { EMOJI_NAMES } from "../data/emojiNames";
-import cloudvalleyLogo from "../assets/CV-Celeste.png";
+import cloudvalleyLogo from "../assets/logo_dark.svg";
 
 interface IntegratedEmojiSelectorProps {
   selectedEmoji: string | null;
   onEmojiSelect: (emoji: string) => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export const IntegratedEmojiSelector: React.FC<
   IntegratedEmojiSelectorProps
-> = ({ selectedEmoji, onEmojiSelect }) => {
+> = ({ selectedEmoji, onEmojiSelect, onOpenChange }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
   const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);

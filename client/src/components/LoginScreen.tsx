@@ -18,7 +18,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     <div className="login-screen">
       <div className="login-container">
         <div className="login-header">
-          <h1>🃏 MorsiPlanning</h1>
+          <h1>Planning</h1>
           <p>Ingresa tu nombre para comenzar</p>
           {/* <p className="admin-hint">
             Para ser administrador, agrega "_admin" al final de tu nombre

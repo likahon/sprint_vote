@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { ANIMATION_CONFIG } from "../types";
-import cloudvalleyLogo from "../assets/CV-Celeste.png";
+import cloudvalleyLogo from "../assets/logo_dark.svg";
 
 interface FlyingEmojiProps {
   emoji: string;
@@ -33,7 +33,7 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
 
     const angle = Math.atan2(
       toPosition.y - fromPosition.y,
-      toPosition.x - fromPosition.x
+      toPosition.x - fromPosition.x,
     );
 
     const initialSpeed = ANIMATION_CONFIG.EMOJI_INITIAL_SPEED;
@@ -64,7 +64,7 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
 
         const distanceToTarget = Math.sqrt(
           Math.pow(currentX - toPosition.x, 2) +
-            Math.pow(currentY - toPosition.y, 2)
+            Math.pow(currentY - toPosition.y, 2),
         );
 
         if (distanceToTarget < 30 && !hasHit) {
@@ -77,11 +77,11 @@ export const FlyingEmoji: React.FC<FlyingEmojiProps> = ({
 
           const impactAngle = Math.atan2(
             toPosition.y - currentY,
-            toPosition.x - currentX
+            toPosition.x - currentX,
           );
 
           const currentSpeed = Math.sqrt(
-            velocityX * velocityX + velocityY * velocityY
+            velocityX * velocityX + velocityY * velocityY,
           );
 
           const bounceSpeed = currentSpeed * bounceDamping;

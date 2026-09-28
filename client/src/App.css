@@ -183,85 +183,126 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
   min-height: 0;
+  width: 100%;
 }
 
 .cards-area {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 200px));
-  gap: 1.5rem;
-  max-width: 1000px;
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-content: flex-start;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1100px;
+  padding: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.cards-area .user-card {
+  flex: 0 0 auto;
+  width: 130px;
 }
 
 .user-card {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: center;
   border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   position: relative;
   box-shadow: var(--shadow-sm);
-  max-width: 200px;
-  min-width: 150px;
-  width: 150px;
-  height: 220px;
+  width: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.user-card:hover::before {
+  opacity: 1;
 }
 
 .user-card.admin {
   border-color: var(--accent-warning);
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--bg-primary));
+  background: linear-gradient(150deg, rgba(245, 158, 11, 0.12), var(--bg-primary) 60%);
+}
+
+.user-card.admin::before {
+  background: linear-gradient(90deg, var(--accent-warning), #f59e0b);
+  opacity: 1;
 }
 
 .user-card.current-user {
   border-color: var(--accent-primary);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), var(--bg-primary));
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(150deg, rgba(59, 130, 246, 0.12), var(--bg-primary) 60%);
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.user-card.current-user::before {
+  opacity: 1;
 }
 
 .user-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px) scale(1.02);
   box-shadow: var(--shadow-xl);
   border-color: var(--accent-primary);
 }
 
 .user-card.current-user:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px) scale(1.02);
 }
 
 .user-name {
   font-weight: 600;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   color: var(--text-primary);
-  min-height: 1.5rem;
+  min-height: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .admin-crown {
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .card {
-  width: 70px;
-  height: 100px;
-  min-height: 100px;
-  margin: 0 auto 0.75rem;
+  width: 55px;
+  height: 80px;
+  min-height: 80px;
+  margin: 0.25rem auto;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   transition: all 0.3s ease;
   flex-shrink: 0;
@@ -270,21 +311,24 @@
 }
 
 .card.hidden {
-  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+  background: linear-gradient(150deg, var(--bg-tertiary), var(--bg-secondary));
   color: var(--text-muted);
   border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .card.revealed {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  background: linear-gradient(150deg, var(--accent-primary), var(--accent-secondary));
   color: white;
-  animation: flipCard 0.6s ease-in-out;
+  animation: flipCard 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(59, 130, 246, 0.25);
 }
 
 .card.revealed.no-vote {
-  background: linear-gradient(135deg, var(--text-muted), var(--bg-tertiary));
+  background: linear-gradient(150deg, var(--text-muted), var(--bg-tertiary));
   color: var(--text-secondary);
   opacity: 0.7;
+  box-shadow: var(--shadow-sm);
 }
 
 @keyframes flipCard {
@@ -302,7 +346,7 @@
 }
 
 .card-back-logo {
-  width: 60px;
+  width: 48px;
   height: auto;
   object-fit: contain;
   opacity: 0.9;
@@ -310,19 +354,32 @@
 }
 
 .vote-status {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  font-weight: 500;
-  min-height: 24px;
+  font-weight: 600;
+  min-height: 22px;
+  margin-top: 0.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  transition: all 0.2s ease;
 }
 
 /* Voting Options */
 .voting-options {
   margin: 1rem 0;
   text-align: center;
+}
+
+.emoji-selector-container {
+  display: none;
+}
+
+.emoji-instructions {
+  display: none;
 }
 
 .voting-header {
@@ -336,9 +393,10 @@
 
 .voting-options h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .emoji-selector-container {
@@ -384,33 +442,40 @@
   height: 100px;
   border: none;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  color: white;
+  background: var(--bg-primary);
+  color: var(--accent-primary);
   font-size: 1.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--border-color);
 }
 
-.card-option:hover:not(.disabled) {
-  transform: translateY(-5px);
+.card-option:hover:not(:disabled) {
+  transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
+  background: linear-gradient(150deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
 }
 
 .card-option.selected {
-  background: linear-gradient(135deg, var(--accent-error), #dc2626);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-5px);
+  background: linear-gradient(150deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(59, 130, 246, 0.25);
+  transform: translateY(-6px);
 }
 
-.card-option.disabled {
-  opacity: 0.5;
+.card-option:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .card-number {
@@ -674,12 +739,14 @@
 }
 
 /* Admin Controls */
-.admin-controls {
+.admin-controls,
+.admin-controls-compact {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   margin: 1rem 0;
+  padding: 0 1rem;
 }
 
 .admin-info {
@@ -698,36 +765,43 @@
 }
 
 .reveal-btn, .reset-btn {
-  padding: 1rem 2rem;
+  padding: 0.9rem 2.2rem;
   border: none;
   border-radius: var(--radius-lg);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+  letter-spacing: 0.01em;
   box-shadow: var(--shadow-md);
 }
 
 .reveal-btn {
-  background: linear-gradient(135deg, var(--accent-warning), #f59e0b);
+  background: linear-gradient(150deg, var(--accent-warning), #f59e0b);
   color: white;
 }
 
 .reveal-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), 0 8px 20px rgba(245, 158, 11, 0.35);
+}
+
+.reveal-btn:active {
+  transform: translateY(-1px);
 }
 
 .reset-btn {
-  background: linear-gradient(135deg, var(--accent-secondary), #7c3aed);
+  background: linear-gradient(150deg, var(--accent-secondary), #7c3aed);
   color: white;
 }
 
 .reset-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), 0 8px 20px rgba(124, 58, 237, 0.35);
+}
+
+.reset-btn:active {
+  transform: translateY(-1px);
 }
 
 .leave-btn {
@@ -1118,8 +1192,11 @@
   }
 
   .cards-area {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
+  }
+
+  .cards-area .user-card {
+    width: 140px;
   }
   
   .cards-grid {
@@ -1739,4 +1816,70 @@
   transform: none;
   box-shadow: var(--shadow-sm);
   border-color: var(--border-color);
+}
+
+/* Emoji Selector flotante, arriba del botón de chat */
+.emoji-selector-top {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.emoji-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-bottom: 0.5rem;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+.emoji-selector-top .integrated-emoji-selector {
+  margin-right: 0;
+}
+
+.emoji-selector-top .emoji-trigger {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-xl);
+}
+
+/* El trigger está pegado al borde derecho: el dropdown debe abrir hacia la izquierda */
+.emoji-selector-top .emoji-dropdown {
+  left: auto;
+  right: 0;
+}
+
+/* El tooltip también debe alinearse a la derecha en vez de centrarse */
+.emoji-selector-top .emoji-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.emoji-selector-top .emoji-tooltip::after {
+  left: auto;
+  right: 1rem;
+  transform: none;
+}
+
+.emoji-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--text-primary);
 }

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
+import { IntegratedEmojiSelector } from "./IntegratedEmojiSelector";
 
 interface ChatProps {
   messages: ChatMessage[];
@@ -8,6 +9,8 @@ interface ChatProps {
   onSendMessage: (message: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  selectedEmoji: string | null;
+  onEmojiSelect: (emoji: string) => void;
 }
 
 export const Chat: React.FC<ChatProps> = ({
@@ -16,8 +19,12 @@ export const Chat: React.FC<ChatProps> = ({
   onSendMessage,
   isOpen,
   onToggle,
+  selectedEmoji,
+  onEmojiSelect,
 }) => {
   const [inputMessage, setInputMessage] = useState("");
+  const [showEmojiTooltip, setShowEmojiTooltip] = useState(false);
+  const [isEmojiDropdownOpen, setIsEmojiDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +59,21 @@ export const Chat: React.FC<ChatProps> = ({
 
   return (
     <div className={`chat-container ${isOpen ? "open" : "closed"}`}>
+      <div
+        className="emoji-selector-top"
+        onMouseEnter={() => setShowEmojiTooltip(true)}
+        onMouseLeave={() => setShowEmojiTooltip(false)}
+      >
+        <IntegratedEmojiSelector
+          selectedEmoji={selectedEmoji}
+          onEmojiSelect={onEmojiSelect}
+          onOpenChange={setIsEmojiDropdownOpen}
+        />
+        {showEmojiTooltip && !isEmojiDropdownOpen && (
+          <div className="emoji-tooltip">Seleccioná un emoji para lanzar</div>
+        )}
+      </div>
+
       <button className="chat-toggle" onClick={onToggle}>
         <span className="chat-icon">💬</span>
         {!isOpen && messages.length > 0 && (

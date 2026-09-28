@@ -12,10 +12,13 @@ export const ANIMATION_CONFIG = {
 
 export const VOTE_OPTIONS = [
   { value: '1', label: '1' },
+  { value: '2', label: '2' },
   { value: '3', label: '3' },
   { value: '5', label: '5' },
   { value: '8', label: '8' },
-  { value: '13', label: '13' }
+  { value: '13', label: '13' },
+  { value: '21', label: '21' },
+  { value: '∞', label: '∞' }
 ] as const;
 
 export const UI_CONFIG = {

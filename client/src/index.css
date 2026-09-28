@@ -29,6 +29,8 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+
+  --overlay-bg: rgba(255, 255, 255, 0.72);
 }
 
 [data-theme="dark"] {
@@ -56,6 +58,8 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+
+  --overlay-bg: rgba(15, 23, 42, 0.66);
 }
 
 * {
@@ -70,27 +74,73 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
   background: var(--bg-secondary);
-  background-image: url('/src/assets/story_points_vote_day.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
   height: 100vh;
   overflow: hidden;
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
   margin: 0;
   padding: 0;
+  position: relative;
 }
 
-[data-theme="dark"] body {
-  background-image: url('/src/assets/story_points_vote_night.png');
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/src/assets/wallpaper_light.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -2;
+  transition: opacity 0.3s ease;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: -1;
+  transition: background 0.3s ease;
+}
+
+[data-theme="dark"] body::before {
+  background-image: url('/src/assets/wallpaper_dark.png');
 }
 
 code {
   font-family: 'JetBrains Mono', 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.03em;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Scrollbar moderna */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
 }
 
 /* Theme Toggle */

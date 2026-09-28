@@ -25,6 +25,9 @@ function App() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(
+    "cloudvalley",
+  );
 
   const handleLogin = (name: string) => {
     joinRoom(name);
@@ -115,6 +118,8 @@ function App() {
         socketData={socketData}
         showSettingsModal={showSettingsModal}
         setShowSettingsModal={setShowSettingsModal}
+        selectedEmoji={selectedEmoji}
+        onEmojiSelect={setSelectedEmoji}
       />
       <UserManagementModal
         isOpen={showUsersModal}
@@ -130,6 +135,8 @@ function App() {
         onSendMessage={sendChatMessage}
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen(!isChatOpen)}
+        selectedEmoji={selectedEmoji}
+        onEmojiSelect={setSelectedEmoji}
       />
     </>
   );
