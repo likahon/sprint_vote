@@ -256,25 +256,28 @@ export const GameTable: React.FC<GameTableProps> = ({
               <span className="card-number">{option.label}</span>
             </button>
           ))}
-        </div>
-      </div>
 
-      {/* Controles de admin */}
-      {(canReveal || canReset) && (
-        <div className="admin-controls-compact">
           {canReveal && (
-            <button className="reveal-btn" onClick={handleRevealVotes}>
-              🃏 Revelar Votaciones
+            <button
+              className="icon-option reveal-icon-btn"
+              onClick={handleRevealVotes}
+              title="Revelar votaciones"
+            >
+              👁️
             </button>
           )}
 
           {canReset && (
-            <button className="reset-btn" onClick={handleResetVotes}>
-              🔄 Reiniciar
+            <button
+              className="icon-option reset-icon-btn"
+              onClick={handleResetVotes}
+              title="Reiniciar votaciones"
+            >
+              🔄
             </button>
           )}
         </div>
-      )}
+      </div>
 
       {/* Emojis volando - múltiples simultáneos */}
       {flyingEmojis.map((flyingEmoji) => (

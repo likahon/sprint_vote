@@ -482,6 +482,45 @@
   font-size: 2rem;
 }
 
+/* Iconos de admin (revelar / reiniciar) junto a las cartas de votación */
+.icon-option {
+  width: 70px;
+  height: 100px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  font-size: 1.75rem;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.icon-option:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.reveal-icon-btn {
+  border-color: var(--accent-warning);
+}
+
+.reveal-icon-btn:hover {
+  background: linear-gradient(150deg, var(--accent-warning), #f59e0b);
+  box-shadow: var(--shadow-lg), 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+.reset-icon-btn {
+  border-color: var(--accent-secondary);
+}
+
+.reset-icon-btn:hover {
+  background: linear-gradient(150deg, var(--accent-secondary), #7c3aed);
+  box-shadow: var(--shadow-lg), 0 8px 20px rgba(124, 58, 237, 0.3);
+}
+
 /* Vote Summary Modal */
 .summary-modal-overlay {
   position: fixed;
