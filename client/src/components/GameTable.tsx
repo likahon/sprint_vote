@@ -260,11 +260,19 @@ export const GameTable: React.FC<GameTableProps> = ({
       </div>
 
       {/* Controles de admin */}
-      {canReveal && (
+      {(canReveal || canReset) && (
         <div className="admin-controls-compact">
-          <button className="reveal-btn" onClick={handleRevealVotes}>
-            🃏 Revelar Votaciones
-          </button>
+          {canReveal && (
+            <button className="reveal-btn" onClick={handleRevealVotes}>
+              🃏 Revelar Votaciones
+            </button>
+          )}
+
+          {canReset && (
+            <button className="reset-btn" onClick={handleResetVotes}>
+              🔄 Reiniciar
+            </button>
+          )}
         </div>
       )}
 
